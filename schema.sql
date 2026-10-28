@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS rsvp_submissions (
   departure_date TEXT, departure_window TEXT,
   song_name TEXT, song_artist TEXT, song_url TEXT,
   questions TEXT, note TEXT,
+  extras TEXT,                      -- JSON: optional extra answers (drink, drinkName, advice)
   source TEXT NOT NULL DEFAULT 'web',
   admin_notes TEXT,
   edit_token_hash TEXT NOT NULL UNIQUE,  -- SHA-256 only; raw token is shown to the guest once

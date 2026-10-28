@@ -52,6 +52,7 @@ function eventOptions(events) {
 }
 
 const isSimpleGroup = (settings, group) => (settings.simpleGroups || []).includes(Number(group));
+const isFunGroup = (settings, group) => (settings.funGroups || []).includes(Number(group));
 const isFullGroup = (settings, group) => (settings.fullGroups || []).includes(Number(group));
 
 /**
@@ -105,7 +106,7 @@ function validateRsvp(input, { group, events, settings }) {
       v.events = picked.filter(id => allowed.has(id));
     }
     if (simple) {
-      Object.assign(v, { arrivalDate: '', arrivalWindow: '', departureDate: '', departureWindow: '', songName: '', songArtist: '', songUrl: '', questions: '' });
+      Object.assign(v, { arrivalDate: '', arrivalWindow: '', departureDate: '', departureWindow: '', songName: '', songArtist: '', songUrl: '', questions: '', drink: '', drinkName: '', advice: '' });
       return { ok: Object.keys(errors).length === 0, errors, value: v };
     }
 
@@ -131,9 +132,13 @@ function validateRsvp(input, { group, events, settings }) {
     v.songUrl = full ? '' : clean(input.songUrl, 300);
     if (v.songUrl && !/^https:\/\/[^\s<>"']+\.[^\s<>"']+$/i.test(v.songUrl)) errors.songUrl = 'url';
     v.questions = clean(input.questions, 1500);
+    const fun = isFunGroup(settings, group);
+    v.drink = fun ? clean(input.drink, 120) : '';
+    v.drinkName = fun ? clean(input.drinkName, 120) : '';
+    v.advice = fun ? clean(input.advice, 800) : '';
   } else {
     // A decline carries no party, events, or travel details.
-    Object.assign(v, { partySize: 0, guests: [], events: [], arrivalDate: '', arrivalWindow: '', departureDate: '', departureWindow: '', songName: '', songArtist: '', songUrl: '', questions: '' });
+    Object.assign(v, { partySize: 0, guests: [], events: [], arrivalDate: '', arrivalWindow: '', departureDate: '', departureWindow: '', songName: '', songArtist: '', songUrl: '', questions: '', drink: '', drinkName: '', advice: '' });
   }
   return { ok: Object.keys(errors).length === 0, errors, value: v };
 }
@@ -261,15 +266,15 @@ function exportCsv(type, submissions, events, settings) {
   }
   const rows = [['Party ID', 'Submitted', 'Updated', 'Source', 'Group', 'Status', 'Primary contact', 'WhatsApp', 'Party size', 'Guest names',
     ...eventOptions(events).map(o => o.multi ? `${o.title.en} (${o.date})` : o.title.en), 'Arrival date', 'Arrival window', 'Departure date', 'Departure window',
-    'Song', 'Artist', 'Song link', 'Questions', 'Note']];
+    'Song', 'Artist', 'Song link', 'Go-to drink', 'Signature drink name', 'Marriage advice', 'Questions', 'Note']];
   submissions.forEach(s => rows.push([s.id, s.createdAt, s.updatedAt, s.source, GROUPS[s.group], s.status, s.primaryName, s.phone,
     s.guests.length, s.guests.join('; '), ...eventOptions(events).map(o => (s.events.includes(o.id) ? 'Yes' : '')),
     s.arrivalDate, WINDOW_LABEL[s.arrivalWindow] || '', s.departureDate, WINDOW_LABEL[s.departureWindow] || '',
-    s.songName, s.songArtist, s.songUrl, s.questions, s.note]));
+    s.songName, s.songArtist, s.songUrl, s.drink || '', s.drinkName || '', s.advice || '', s.questions, s.note]));
   return toCsv(rows);
 }
 
-const Rules = { WINDOWS, WINDOW_LABEL, GROUPS, GROUP_IDS, eventDays, eventOptions, isSimpleGroup, isFullGroup, stayFor, roomNights,
+const Rules = { WINDOWS, WINDOW_LABEL, GROUPS, GROUP_IDS, eventDays, eventOptions, isSimpleGroup, isFullGroup, isFunGroup, stayFor, roomNights,
   clean, isFullName, normalizePhone, isOpen, eligibleEvents, validateRsvp, guestNights,
   duplicateFlags, findDuplicate, summarize, exportCsv, toCsv };
 export default Rules; // @@strip-for-browser

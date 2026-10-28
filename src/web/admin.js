@@ -131,8 +131,11 @@
     const songs = D.submissions.filter(s => s.songName || s.songArtist);
     const qs = D.submissions.filter(s => s.questions);
     const notes = D.submissions.filter(s => s.note);
+    const drinks = D.submissions.filter(s => s.drink || s.drinkName), advice = D.submissions.filter(s => s.advice);
     const safeUrl = u => /^https:\/\//i.test(u) ? u : '';
     return `<div class="cardx"><h3>Song requests (${songs.length})</h3>${songs.length ? `<table class="tbl"><tr><th>Song</th><th>Artist</th><th>From</th></tr>${songs.map(s => `<tr><td>${safeUrl(s.songUrl) ? `<a href="${esc(s.songUrl)}" target="_blank" rel="noopener noreferrer">${esc(s.songName || 'link')}</a>` : esc(s.songName)}</td><td>${esc(s.songArtist)}</td><td>${esc(s.primaryName)}</td></tr>`).join('')}</table>` : '<p class="hint">None yet.</p>'}</div>
+      <div class="cardx"><h3>Drinks (${drinks.length})</h3>${drinks.length ? `<table class="tbl"><tr><th>Go-to drink</th><th>Signature drink name idea</th><th>From</th></tr>${drinks.map(s => `<tr><td>${esc(s.drink || '—')}</td><td>${esc(s.drinkName || '—')}</td><td class="muted">${esc(s.primaryName)}</td></tr>`).join('')}</table>` : '<p class="hint">None yet.</p>'}</div>
+      <div class="cardx"><h3>Marriage advice (${advice.length})</h3>${advice.map(s => `<div class="msgq"><p>${esc(s.advice)}</p><small class="muted">${esc(s.primaryName)}</small></div>`).join('') || '<p class="hint">None yet.</p>'}</div>
       <div class="cardx"><h3>Questions from guests (${qs.length})</h3>${qs.map(s => `<div class="msgq"><p>${esc(s.questions)}</p><small class="muted">${esc(s.primaryName)} · <a href="https://wa.me/${esc(s.phone.replace('+', ''))}" target="_blank" rel="noopener">WhatsApp ${esc(s.phone)}</a></small></div>`).join('') || '<p class="hint">None yet.</p>'}</div>
       <div class="cardx"><h3>Messages with declines (${notes.length})</h3>${notes.map(s => `<div class="msgq"><p>${esc(s.note)}</p><small class="muted">${esc(s.primaryName)}</small></div>`).join('') || '<p class="hint">None yet.</p>'}</div>`;
   }
@@ -201,7 +204,7 @@
   }
 
   function render() {
-    const tabs = { overview: 'Overview', responses: 'Responses', guests: 'Guests', accommodation: 'Accommodation', music: 'Music & messages', content: 'Content', settings: 'Settings & export' };
+    const tabs = { overview: 'Overview', responses: 'Responses', guests: 'Guests', accommodation: 'Accommodation', music: 'Music, drinks & messages', content: 'Content', settings: 'Settings & export' };
     root().innerHTML = `<div class="admin">${window.PREVIEW ? `<div class="preview-banner">Preview dashboard — sample data only · <button type="button" class="linkbtn" style="color:#fff;padding:2px 4px" data-go="guest">Guest site</button></div>` : ''}
       <header class="ahead"><div><img src="${(window.ASSETS && window.ASSETS['mono.webp']) || '/assets/mono.webp'}" alt="" style="height:34px"><b>RSVP dashboard</b></div><div><button class="linkbtn" data-a="refresh">Refresh</button><button class="linkbtn" data-a="logout">Sign out</button></div></header>
       <nav class="atabs">${Object.entries(tabs).map(([k, v]) => `<button data-tab="${k}" aria-selected="${tab === k}">${v}</button>`).join('')}</nav>

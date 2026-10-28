@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS = {
   countdownTo: '2027-02-14T13:00:00+05:30', // the countdown on every link counts down to this moment
   defaultLang: { 1: 'en', 2: 'hi', 3: 'hi', 4: 'en' }, // language each link opens in (guests can still switch)
   guideGroups: [1], // groups that see the travel guide for international guests
+  funGroups: [1], // groups asked the drink & marriage-advice questions
   fullGroups: [2, 3], // RSVP 'yes' = every event the group is invited to; no event picker, no song request
   // Personal contacts for travel planning, shown in the travel guide (only after a guest opens their invitation).
   guideContacts: [

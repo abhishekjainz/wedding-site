@@ -399,12 +399,12 @@
   // Who's coming: the person replying is attendee 1 by default ("I'll be there"), and adds
   // anyone else by name. The head-count is simply the length of that list.
   const blankForm = () => ({ status: '', primaryName: '', phoneCc: '+91', phoneNumber: '', note: '', meAttending: true, others: [], events: [],
-    arrivalDate: '', arrivalWindow: '', departureDate: '', departureWindow: '', songName: '', songArtist: '', songUrl: '', questions: '' });
+    arrivalDate: '', arrivalWindow: '', departureDate: '', departureWindow: '', songName: '', songArtist: '', songUrl: '', questions: '', drink: '', drinkName: '', advice: '' });
   const rsvp = { open: false, step: 0, form: blankForm(), errors: {}, mode: 'new', token: null, formErr: '', busy: false, saved: null };
   const STEP_FIELDS = {
     details: ['status', 'primaryName', 'phone', 'note'],
     party: ['partySize', 'guest', 'events'],
-    travel: ['arrivalDate', 'arrivalWindow', 'departureDate', 'departureWindow', 'songUrl', 'songName', 'songArtist', 'questions'],
+    travel: ['arrivalDate', 'arrivalWindow', 'departureDate', 'departureWindow', 'songUrl', 'songName', 'songArtist', 'drink', 'drinkName', 'advice', 'questions'],
     review: [],
   };
   const isSimple = () => !!(site && site.settings.simple);
@@ -497,6 +497,10 @@
       <div class="field"><label for="f-sn">${esc(t.songName)} <span class="muted">(${esc(t.optional)})</span></label><input class="input" id="f-sn" data-f="songName" value="${esc(f.songName)}" maxlength="120"></div>
       <div class="field"><label for="f-sa">${esc(t.artist)} <span class="muted">(${esc(t.optional)})</span></label><input class="input" id="f-sa" data-f="songArtist" value="${esc(f.songArtist)}" maxlength="120"></div>
       <div class="${fieldCls('songUrl')}"><label for="f-su">${esc(t.songUrl)}</label><input class="input" id="f-su" data-f="songUrl" value="${esc(f.songUrl)}" inputmode="url" maxlength="300" placeholder="https://"><p class="msg">${errMsg('songUrl')}</p></div>`}
+      ${site.settings.fun ? `<p class="q" style="margin-top:30px">${esc(t.funTitle)} <span class="muted" style="font-size:15px">(${esc(t.optional)})</span></p>
+      <div class="field"><label for="f-dr">${esc(t.drink)}</label><input class="input" id="f-dr" data-f="drink" value="${esc(f.drink || '')}" maxlength="120"></div>
+      <div class="field"><label for="f-dn">${esc(t.drinkName)}</label><input class="input" id="f-dn" data-f="drinkName" value="${esc(f.drinkName || '')}" maxlength="120"></div>
+      <div class="field"><label for="f-adv">${esc(t.advice)}</label><textarea class="input" id="f-adv" data-f="advice" rows="3" maxlength="800">${esc(f.advice || '')}</textarea></div>` : ''}
       <div class="field" style="margin-top:26px"><label for="f-q" class="q" style="font:500 20px/1.35 var(--serif);color:var(--ink)">${esc(t.questions)}</label><textarea class="input" id="f-q" data-f="questions" maxlength="1500">${esc(f.questions)}</textarea></div>`;
     return reviewHtml();
   }
@@ -526,6 +530,8 @@
         + (isFull() ? '' : row(t.events, isSimple() ? site.events.map(e => esc(L(e.title))).join('<br>') : eventsSummary(f.events), isSimple() ? -1 : at('party')));
       if (!isSimple()) rows += row(t.travel, travel, at('travel'))
         + (f.songName || f.songArtist ? row('♪', esc([f.songName, f.songArtist].filter(Boolean).join(' — ')) + (f.songUrl ? `<br><small class="muted">${esc(f.songUrl)}</small>` : ''), at('travel')) : '')
+        + (f.drink || f.drinkName ? row(t.drinkRow, [f.drink, f.drinkName ? '“' + f.drinkName + '”' : ''].filter(Boolean).map(esc).join('<br>'), at('travel')) : '')
+        + (f.advice ? row(t.adviceRow, esc(f.advice), at('travel')) : '')
         + (f.questions ? row(t.message, esc(f.questions), at('travel')) : '');
     } else if (f.note) rows += row(t.message, esc(f.note), at('details'));
     return `<div class="summary"><dl>${rows}</dl></div>`;

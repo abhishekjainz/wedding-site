@@ -210,3 +210,16 @@ test('only Friends get the travel guide and its contacts', async () => {
     assert.equal(s.guide, want); assert.equal(s.guideContacts.length > 0, want);
   }
 });
+
+test('drink & advice questions are kept for Friends only', async () => {
+  const { svc, g1, g3, admin } = await setup();
+  const extra = { drink: 'Masala chai', drinkName: 'The Dreamy Shishek', advice: 'Never go to bed angry.' };
+  const a = await svc.submit(base(extra), ctx(g1, 'a'));
+  assert.equal(a.status, 200); assert.equal(a.body.submission.drinkName, 'The Dreamy Shishek'); assert.equal(a.body.submission.advice, 'Never go to bed angry.');
+  const b = await svc.submit(base({ ...extra, primaryName: 'Neha Shah', phoneNumber: '9811100000', partySize: 1, guests: ['Neha Shah'] }), ctx(g3, 'b'));
+  assert.equal(b.body.submission.drink, ''); assert.equal(b.body.submission.advice, '');
+  assert.equal((await svc.site({}, ctx(g1))).body.settings.fun, true);
+  assert.equal((await svc.site({}, ctx(g3))).body.settings.fun, false);
+  const csv = (await svc.adminExport({ type: 'responses' }, { ip: 'x', sessions: { admin } })).csv;
+  assert.ok(csv.includes('Marriage advice') && csv.includes('Never go to bed angry.'));
+});

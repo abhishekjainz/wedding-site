@@ -12,7 +12,17 @@ function d1Store(db) {
     songName: r.song_name || '', songArtist: r.song_artist || '', songUrl: r.song_url || '',
     questions: r.questions || '', note: r.note || '', source: r.source, adminNotes: r.admin_notes || '',
     editTokenHash: r.edit_token_hash, createdAt: r.created_at, updatedAt: r.updated_at,
+    ...pickExtras(r.extras),
   });
+  // Optional extra answers (e.g. the Friends' drink & advice questions) live in one JSON column.
+  const EXTRA_KEYS = ['drink', 'drinkName', 'advice'];
+  function pickExtras(json) { let o = {}; try { o = JSON.parse(json || '{}') || {}; } catch {} return Object.fromEntries(EXTRA_KEYS.map(k => [k, typeof o[k] === 'string' ? o[k] : ''])); }
+  // Databases created before the extras column existed get it added automatically, once.
+  let schemaReady = null;
+  const ensureSchema = () => (schemaReady = schemaReady || (async () => {
+    const cols = (await db.prepare('PRAGMA table_info(rsvp_submissions)').all()).results || [];
+    if (!cols.some(c => c.name === 'extras')) { try { await db.prepare('ALTER TABLE rsvp_submissions ADD COLUMN extras TEXT').run(); } catch (e) { if (!/duplicate column/i.test(String(e && e.message))) { schemaReady = null; throw e; } } }
+  })());
   async function hydrate(rows) {
     if (!rows.length) return [];
     const [g, e] = await db.batch([
@@ -26,12 +36,13 @@ function d1Store(db) {
   }
   const writeStmts = s => [
     db.prepare(`INSERT INTO rsvp_submissions (id, group_id, status, primary_name, phone, arrival_date, arrival_window, departure_date, departure_window,
-      song_name, song_artist, song_url, questions, note, source, admin_notes, edit_token_hash, created_at, updated_at)
-      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)
+      song_name, song_artist, song_url, questions, note, source, admin_notes, edit_token_hash, created_at, updated_at, extras)
+      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)
       ON CONFLICT(id) DO UPDATE SET group_id=?2, status=?3, primary_name=?4, phone=?5, arrival_date=?6, arrival_window=?7, departure_date=?8,
-      departure_window=?9, song_name=?10, song_artist=?11, song_url=?12, questions=?13, note=?14, source=?15, admin_notes=?16, edit_token_hash=?17, updated_at=?19`)
+      departure_window=?9, song_name=?10, song_artist=?11, song_url=?12, questions=?13, note=?14, source=?15, admin_notes=?16, edit_token_hash=?17, updated_at=?19, extras=?20`)
       .bind(s.id, s.group, s.status, s.primaryName, s.phone, s.arrivalDate, s.arrivalWindow, s.departureDate, s.departureWindow,
-        s.songName, s.songArtist, s.songUrl, s.questions, s.note, s.source, s.adminNotes || '', s.editTokenHash, s.createdAt, s.updatedAt),
+        s.songName, s.songArtist, s.songUrl, s.questions, s.note, s.source, s.adminNotes || '', s.editTokenHash, s.createdAt, s.updatedAt,
+        JSON.stringify(Object.fromEntries(EXTRA_KEYS.map(k => [k, s[k] || ''])))),
     db.prepare('DELETE FROM rsvp_guests WHERE submission_id = ?').bind(s.id),
     db.prepare('DELETE FROM rsvp_event_selections WHERE submission_id = ?').bind(s.id),
     ...s.guests.map((g, i) => db.prepare('INSERT INTO rsvp_guests (submission_id, position, full_name) VALUES (?,?,?)').bind(s.id, i, g)),
@@ -45,11 +56,11 @@ function d1Store(db) {
     .bind(key, JSON.stringify(value), new Date().toISOString()).run();
 
   return {
-    async listSubmissions() { return hydrate((await db.prepare('SELECT * FROM rsvp_submissions ORDER BY created_at').all()).results); },
-    async getSubmission(id) { const r = await db.prepare('SELECT * FROM rsvp_submissions WHERE id = ?').bind(id).first(); return r ? (await hydrate([r])).find(x => x.id === id) : null; },
-    async getSubmissionByTokenHash(h) { const r = await db.prepare('SELECT * FROM rsvp_submissions WHERE edit_token_hash = ?').bind(h).first(); return r ? (await hydrate([r])).find(x => x.id === r.id) : null; },
-    async insertSubmission(s) { await db.batch(writeStmts(s)); }, // D1 batches run as a single transaction
-    async updateSubmission(s) { await db.batch(writeStmts(s)); },
+    async listSubmissions() { await ensureSchema(); return hydrate((await db.prepare('SELECT * FROM rsvp_submissions ORDER BY created_at').all()).results); },
+    async getSubmission(id) { await ensureSchema(); const r = await db.prepare('SELECT * FROM rsvp_submissions WHERE id = ?').bind(id).first(); return r ? (await hydrate([r])).find(x => x.id === id) : null; },
+    async getSubmissionByTokenHash(h) { await ensureSchema(); const r = await db.prepare('SELECT * FROM rsvp_submissions WHERE edit_token_hash = ?').bind(h).first(); return r ? (await hydrate([r])).find(x => x.id === r.id) : null; },
+    async insertSubmission(s) { await ensureSchema(); await db.batch(writeStmts(s)); }, // D1 batches run as a single transaction
+    async updateSubmission(s) { await ensureSchema(); await db.batch(writeStmts(s)); },
     async deleteSubmission(id) {
       await db.batch(['rsvp_guests', 'rsvp_event_selections'].map(t => db.prepare(`DELETE FROM ${t} WHERE submission_id = ?`).bind(id))
         .concat(db.prepare('DELETE FROM rsvp_submissions WHERE id = ?').bind(id)));
