@@ -8,7 +8,11 @@
   const ls = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
   const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let lang = ls.get('wd_lang') === 'hi' ? 'hi' : 'en';
+  // Language: a /hi or /en link wins, then the guest's own choice on this phone, then the group's default (set once the site loads).
+  const urlLang = (() => { try { const l = new URLSearchParams(location.search).get('lang'); return l === 'hi' || l === 'en' ? l : ''; } catch { return ''; } })();
+  if (urlLang) ls.set('wd_lang', urlLang);
+  let lang = (urlLang || ls.get('wd_lang')) === 'hi' ? 'hi' : 'en';
+  const applyLang = l => { lang = l; document.documentElement.lang = l; document.body.classList.toggle('lang-hi', l === 'hi'); };
   const T = () => I18N[lang];
   const L = o => (o && typeof o === 'object' ? (o[lang] || o.en || '') : (o || ''));
   let site = null;
@@ -701,12 +705,13 @@
     if (!document.getElementById('art-defs')) { const d = document.createElement('div'); d.id = 'art-defs'; d.innerHTML = Art.defs; document.body.prepend(d); }
     const hash = new URLSearchParams(location.hash.slice(1));
     const params = new URLSearchParams(location.search);
+    if (params.get('lang')) { const q = new URLSearchParams(location.search); q.delete('lang'); try { history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); } catch {} }
     if (hash.get('edit')) {
       const token = hash.get('edit');
       try { history.replaceState(null, '', location.pathname + location.search); } catch {}
       ls.set('wd_seen_intro', '1');
       const r = await call('GET', '/api/site');
-      if (r.status === 200) { site = r.body; renderMain(); }
+      if (r.status === 200) { site = r.body; if (!ls.get('wd_lang') && site.settings.defaultLang) applyLang(site.settings.defaultLang); renderMain(); }
       return loadEdit(token);
     }
     if (params.get('invite')) {
@@ -719,6 +724,7 @@
     if (r.status === 401) return renderGate(params.get('invalid') ? T().badCode : '');
     if (r.status !== 200) return renderGate(T().network);
     site = r.body;
+    if (!ls.get('wd_lang') && site.settings.defaultLang && site.settings.defaultLang !== lang) applyLang(site.settings.defaultLang);
     let wantGuide = false; try { wantGuide = location.hash === '#travel-guide'; } catch {}
     if (wantGuide) return renderGuide();
     renderMain();

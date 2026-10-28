@@ -107,11 +107,13 @@ export default {
     const ck = cookies(req);
     const ctx = { ip: req.headers.get('CF-Connecting-IP') || 'unknown', sessions: { guest: ck.wg_guest, admin: ck.wg_admin } };
 
-    // Short, forwardable invitation links: https://<site>/i/<CODE>
+    // Short, forwardable invitation links: https://<site>/i/<CODE>, or /i/<CODE>/hi or /i/<CODE>/en to choose the language
     if (p.startsWith('/i/')) {
-      const r = await svc.access({ code: decodeURIComponent(p.slice(3)) }, ctx);
+      const [code, lng] = p.slice(3).split('/');
+      const r = await svc.access({ code: decodeURIComponent(code || '') }, ctx);
       if (r.status !== 200) return Response.redirect(url.origin + '/?invalid=1', 302);
-      return new Response(null, { status: 302, headers: { Location: '/', 'Set-Cookie': setCookie(r.setSession), ...SEC_HEADERS } });
+      const to = lng === 'hi' || lng === 'en' ? '/?lang=' + lng : '/';
+      return new Response(null, { status: 302, headers: { Location: to, 'Set-Cookie': setCookie(r.setSession), ...SEC_HEADERS } });
     }
     if (p.startsWith('/media/')) {
       if (!(await svc.site({}, ctx)).body.group && !(await svc.adminData({}, ctx)).body.submissions) return new Response('Not found', { status: 404 });

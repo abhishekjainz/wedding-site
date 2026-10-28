@@ -18,4 +18,4 @@ const v = { SESSION_SECRET: randomBytes(32).toString('base64url'), INVITE_CODE_G
 console.log(`Admin password (keep it private, e.g. in a password manager): ${pw}\n`);
 console.log('Cloudflare → your Worker → Settings → Variables and Secrets → add each as type "Secret":\n');
 for (const [k, val] of Object.entries(v)) console.log(`${k}\n  ${val}\n`);
-['Friends', 'Close Family', 'Family & Guests', 'Other Guests'].forEach((n, i) => console.log(`Group ${i + 1} (${n}) link:  https://<your-site>/i/${v['INVITE_CODE_GROUP' + (i + 1)]}`));
+['Friends', 'Close Family', 'Family & Guests', 'Other Guests'].forEach((n, i) => console.log(`Group ${i + 1} (${n}) link:  https://<your-site>/i/${v['INVITE_CODE_GROUP' + (i + 1)]}   (add /hi or /en to force a language)`));

@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = {
   stayFrom: { 1: '2027-02-12', 2: '2027-02-12', 3: '2027-02-13' },
   stayUntil: '2027-02-15', checkoutTime: '12:00',
   roomOccupancy: 2, // planning estimate: guests per room (each party rounds up to whole rooms)
+  defaultLang: { 1: 'en', 2: 'hi', 3: 'hi', 4: 'en' }, // language each link opens in (guests can still switch)
   fullGroups: [2, 3], // RSVP 'yes' = every event the group is invited to; no event picker, no song request
   // Personal contacts for travel planning, shown in the travel guide (only after a guest opens their invitation).
   guideContacts: [

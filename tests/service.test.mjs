@@ -196,3 +196,9 @@ test('rooms per night follow each party’s own dates inside the hosted stay', a
   assert.ok(d.stayExceptions.find(x => x.name === 'Neha Shah').lateCheckout);
   const site = (await svc.site({}, ctx(g3))).body.settings; assert.equal(site.stayFrom, '2027-02-13'); assert.equal(site.stayUntil, '2027-02-15');
 });
+
+test('each group link carries its default language', async () => {
+  const { svc, g1, g2, g3, g4 } = await setup();
+  const lang = async g => (await svc.site({}, ctx(g))).body.settings.defaultLang;
+  assert.deepEqual([await lang(g1), await lang(g2), await lang(g3), await lang(g4)], ['en', 'hi', 'hi', 'en']);
+});

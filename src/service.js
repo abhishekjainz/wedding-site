@@ -96,6 +96,7 @@ function createService(store, config) {
         editsOpen: Rules.isOpen(settings) || settings.allowEditsAfterDeadline, simple: Rules.isSimpleGroup(settings, group),
         simpleGroups: Rules.isSimpleGroup(settings, group) ? [group] : [],
         full: Rules.isFullGroup(settings, group), fullGroups: Rules.isFullGroup(settings, group) ? [group] : [],
+        defaultLang: ((settings.defaultLang || {})[group]) === 'hi' ? 'hi' : 'en',
         stayFrom: ((settings.stayFrom || {})[group]) || '', stayUntil: settings.stayUntil || '', checkoutTime: settings.checkoutTime || '12:00',
         guideContacts: (settings.guideContacts || []).filter(c => c && c.name && c.phone) },
     };
