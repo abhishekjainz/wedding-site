@@ -10,6 +10,6 @@ run_worker_first = ["/api/*", "/i/*", "/media/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "wedding-rsvp"
-database_id = "REPLACE_WITH_ID_FROM_wrangler_d1_create"
+database_id = "a4575541-0912-41c6-b6d7-4e8533a1f288"
 
 # Secrets (never commit): SESSION_SECRET, INVITE_CODE_GROUP1, INVITE_CODE_GROUP2, ADMIN_PASSWORD_HASH
