@@ -505,7 +505,7 @@
     let rows = row(t.rsvpTitle, `<b>${esc(f.status === 'accept' ? t.attending : t.notAttending)}</b>`, at('details')) + row(t.primaryName, esc(f.primaryName), at('details')) + row(t.whatsapp, esc(phone), at('details'));
     if (f.status === 'accept') {
       rows += row(`${t.guests} (${guests.length})`, guests.map(esc).join('<br>'), at('party'))
-        + row(t.events, isSimple() || isFull() ? site.events.map(e => esc(L(e.title))).join('<br>') : eventsSummary(f.events), isSimple() || isFull() ? -1 : at('party'));
+        + (isFull() ? '' : row(t.events, isSimple() ? site.events.map(e => esc(L(e.title))).join('<br>') : eventsSummary(f.events), isSimple() ? -1 : at('party')));
       if (!isSimple()) rows += row(t.travel, travel, at('travel'))
         + (f.songName || f.songArtist ? row('♪', esc([f.songName, f.songArtist].filter(Boolean).join(' — ')) + (f.songUrl ? `<br><small class="muted">${esc(f.songUrl)}</small>` : ''), at('travel')) : '')
         + (f.questions ? row(t.message, esc(f.questions), at('travel')) : '');
