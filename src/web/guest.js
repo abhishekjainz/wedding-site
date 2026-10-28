@@ -27,6 +27,12 @@
     return `${h12}:${mm} ${h < 12 ? 'AM' : 'PM'}`;
   }
   // "Tue 9 – Thu 11 Feb" / "Tuesday 9 – Thursday 11 February 2027" for multi-day events
+  // Hosted hotel stay for this guest's group (groups 1–3), e.g. "from Fri, 12 Feb until check-out at 12 noon on Mon, 15 Feb".
+  function stayText() {
+    const s = site && site.settings; if (!s || !s.stayFrom || !s.stayUntil || s.simple) return '';
+    const time = s.checkoutTime === '12:00' ? (lang === 'hi' ? 'दोपहर 12 बजे' : '12 noon') : fmtTime(s.checkoutTime);
+    return T().stayLine(fmtDate(s.stayFrom), fmtDate(s.stayUntil), time);
+  }
   function fmtGroupSpan() {
     const ds = site.events.flatMap(e => Rules.eventDays(e)).sort();
     return ds.length ? fmtSpan({ date: ds[0], endDate: ds[ds.length - 1] }) : '';
@@ -269,8 +275,9 @@
       <section id="venue">${Art.corner('tl sm')}${Art.corner('tr sm', 1)}
         <h2 class="script">${esc(t.venue)}</h2>
         <p style="margin:8px 0 0;font:500 19px var(--serif)">${esc(L(c.venueName))}</p><p class="muted" style="margin:0">${esc(L(c.venueCity))}</p>
-        <div class="venue-img" style="${c.venueImageUrl ? 'border:0' : ''}">${c.venueImageUrl ? `<img src="${esc(media(c.venueImageUrl))}" alt=""${esc(L(c.venueName))}" loading="lazy">` : `<span style="margin-top:-30px">${esc(t.venuePhoto)}</span>`}
+        <div class="venue-img" style="${c.venueImageUrl ? 'border:0' : ''}">${c.venueImageUrl ? `<img src="${esc(media(c.venueImageUrl))}" alt="${esc(L(c.venueName))}" loading="lazy">` : `<span style="margin-top:-30px">${esc(t.venuePhoto)}</span>`}
           <a class="maps" href="${esc(s.mapsUrl)}" target="_blank" rel="noopener">${Art.icon.pin} ${esc(t.openMaps)}</a></div>
+        ${stayText() ? `<div class="stay-note">${Art.icon.bed}<div><b>${esc(t.stayTitle)}</b>${esc(stayText())}</div></div>` : ''}
         <img class="agency" src="${AGENCY}" alt="Phoenix Event Media Group" loading="lazy">
         <p class="muted" style="max-width:340px;margin:6px auto 0;font-size:16px">${esc(t.helpBody)}</p>
         <a class="help-phone" href="tel:${esc(s.helpPhone)}">${Art.icon.phone} ${esc(s.helpPhoneDisplay)}</a>
@@ -468,7 +475,7 @@
       ${f.status === 'decline' ? `<div class="field"><label for="f-note">${esc(t.declineNote)}</label><textarea class="input" id="f-note" data-f="note" maxlength="1000">${esc(f.note)}</textarea></div>` : ''}`;
     if (key === 'party') return partyHtml() + eventsHtml();
     if (key === 'travel') return `
-      <p class="callout">${esc(t.accommodation)}</p>
+      <p class="callout">${stayText() ? esc(stayText() + ' ' + t.stayPlan) : esc(t.accommodation)}</p>
       <p class="q">${esc(t.arrival)}</p>
       <div class="${fieldCls('arrivalDate')}"><label for="f-ad">${esc(t.date)}</label><select class="input" id="f-ad" data-f="arrivalDate">${dateOptions(s.arrivalMin, s.arrivalMax, f.arrivalDate)}</select><p class="msg">${errMsg('arrivalDate')}</p></div>
       <div class="${fieldCls('arrivalWindow')}"><span class="label">${esc(t.timeOfDay)}</span>${pills('arrivalWindow', f.arrivalWindow)}<p class="msg">${errMsg('arrivalWindow')}</p></div>

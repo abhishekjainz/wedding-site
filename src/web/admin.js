@@ -62,8 +62,7 @@
         <p class="hint">Guests counted per party selection; the Home Days are counted day by day. Who can choose what: Friends — everything incl. Home Days · Close Family — all events · Family & Guests — all except Mehendi · Other Guests — Reception only.</p></div>
       <div class="cardx"><h3>By invitation group</h3><table class="tbl"><tr><th>Group</th><th>Accepted</th><th>Declined</th><th>Guests</th></tr>
         ${s.byGroup.map(g => `<tr><td>${esc(g.label)}</td><td>${g.accepted}</td><td>${g.declined}</td><td>${g.guests}</td></tr>`).join('')}</table></div>
-      <div class="cardx"><h3>Peak guest-nights</h3>${s.nights.length ? bars(s.nights.map(n => ({ l: fmtD(n.date), v: n.guests }))) : '<p class="hint">No travel details yet.</p>'}
-        <p class="hint">See the Accommodation tab for details.</p></div>
+      <div class="cardx"><h3>Rooms needed per night</h3>${s.roomNights.length ? bars(s.roomNights.map(n => ({ l: fmtD(n.date), v: n.rooms }))) : '<p class="hint">No travel details yet.</p>'}<p class="hint">Hosted stay only; details on the Accommodation tab.</p></div>
       <div class="cardx"><h3>Status</h3><p>RSVPs are <b>${D.open ? 'open' : 'closed'}</b>. Deadline: ${esc(fmtTs(D.settings.deadline))} IST${D.settings.adminOverrideOpen ? ' (override: open)' : ''}.</p>
         <p>${questions} response(s) include a question or message.</p></div>`;
   }
@@ -107,12 +106,23 @@
     const s = D.summary;
     const tbd = D.submissions.filter(x => x.status === 'accept' && !x.arrivalDate);
     const distTable = rows => rows.length ? `<table class="tbl"><tr><th>Date</th><th>Time window</th><th>Guests</th></tr>${rows.map(r => `<tr><td>${fmtD(r.date)}</td><td>${esc(WIN[r.window] || '—')}</td><td>${r.guests}</td></tr>`).join('')}</table>` : '<p class="hint">None yet.</p>';
-    return `<div class="callout"><b>Guest-nights, not rooms.</b> Each guest is counted for every night from their arrival date (inclusive) to their departure date (exclusive). Divide by your expected occupancy per room — and adjust for families sharing — to estimate rooms.</div>
-      <div class="cardx"><h3>Guests staying each night</h3>${s.nights.length ? `<table class="tbl"><tr><th>Night of</th><th>Guests</th><th>≈ rooms at 2 / room</th></tr>${s.nights.map(n => `<tr><td>${fmtD(n.date)}</td><td><b>${n.guests}</b></td><td class="muted">${Math.ceil(n.guests / 2)}</td></tr>`).join('')}
-        <tr><td><b>Total guest-nights</b></td><td><b>${s.nights.reduce((t, n) => t + n.guests, 0)}</b></td><td></td></tr></table>` : '<p class="hint">No travel details yet.</p>'}
-        <p class="hint">The “2 / room” column is only a rough planning aid, not a booking.</p>
+    const st = D.settings, occ = st.roomOccupancy || 2;
+    const sf = st.stayFrom || {};
+    const ct = (st.checkoutTime || '12:00');
+    const roomsTable = s.roomNights.length ? `<table class="tbl"><tr><th>Night of</th><th>Rooms needed</th><th>Guests</th><th>Parties</th></tr>${s.roomNights.map(n => `<tr><td>${fmtD(n.date)}</td><td><b>${n.rooms}</b></td><td>${n.guests}</td><td class="muted">${n.parties}</td></tr>`).join('')}
+        <tr><td><b>Total room-nights</b></td><td><b>${s.roomNights.reduce((t, n) => t + n.rooms, 0)}</b></td><td>${s.roomNights.reduce((t, n) => t + n.guests, 0)}</td><td></td></tr></table>` : '<p class="hint">No travel details yet.</p>';
+    const ex = s.stayExceptions || [];
+    const exRow = x => `<tr><td><a href="#" data-edit="${esc(x.id)}">${esc(x.name)}</a> <span class="muted">(${x.guests}, ${esc(gname(x.group))})</span></td><td>${[
+      x.before.length ? `Arrives early: ${x.before.length} night(s) before the hosted stay (${x.before.map(fmtD).join(', ')})` : '',
+      x.after.length ? `Stays on: ${x.after.length} night(s) after check-out (${x.after.map(fmtD).join(', ')})` : '',
+      x.lateCheckout ? `Leaves ${fmtD(x.departure)} ${esc(WIN[x.departureWindow] || '')}: after the ${esc(ct)} check-out` : ''].filter(Boolean).join('<br>')}</td></tr>`;
+    return `<div class="callout"><b>Hosted stay:</b> Friends & Close Family from ${fmtD(sf[1] || '')} / ${fmtD(sf[2] || '')}, Family & Guests from ${fmtD(sf[3] || '')}, until check-out at ${esc(ct)} on ${fmtD(st.stayUntil || '')}. Each party is counted only for the nights it is actually in Indore inside that window: from its arrival date up to the night before its departure date, so someone flying out on 14 Feb isn't counted for the night of the 14th.</div>
+      <div class="cardx"><h3>Rooms needed each night (hosted stay)</h3>${roomsTable}
+        <p class="hint">Rooms are estimated per party at ${occ} guests per room, rounded up (a party of 3 = 2 rooms). Change the estimate under Settings.</p>
         <div class="btnrow" style="justify-content:flex-start"><button class="btn ghost" data-dl="nights">Export nights CSV</button><button class="btn ghost" data-dl="guests">Export guest list CSV</button></div></div>
+      <div class="cardx"><h3>Outside the hosted stay (${ex.length})</h3>${ex.length ? `<table class="tbl">${ex.map(exRow).join('')}</table><p class="hint">Not counted in the rooms above: arrange or confirm these separately (early check-in, extra nights, late check-out).</p>` : '<p class="hint">Everyone fits inside the hosted stay so far.</p>'}</div>
       ${tbd.length ? `<div class="cardx"><h3>Travel not yet known (${tbd.reduce((t, x) => t + x.guests.length, 0)} guests)</h3><p>${tbd.map(x => `<a href="#" data-edit="${esc(x.id)}">${esc(x.primaryName)}</a> (${x.guests.length})`).join(', ')}</p><p class="hint">Not included in the nightly counts above.</p></div>` : ''}
+      <div class="cardx"><h3>Everyone in Indore each night (incl. outside the hosted stay)</h3>${s.nights.length ? `<table class="tbl"><tr><th>Night of</th><th>Guests</th></tr>${s.nights.map(n => `<tr><td>${fmtD(n.date)}</td><td>${n.guests}</td></tr>`).join('')}</table>` : '<p class="hint">No travel details yet.</p>'}</div>
       <div class="cardx"><h3>Arrivals</h3>${distTable(s.arrivals.filter(r => r.date))}</div>
       <div class="cardx"><h3>Departures</h3>${distTable(s.departures.filter(r => r.date))}</div>`;
   }
@@ -177,6 +187,9 @@
       <div class="field"><label>Travel-guide contacts (name · WhatsApp number with country code · number as displayed)</label>
         ${[0, 1].map(i => { const c = (s.guideContacts || [])[i] || {}; return `<div class="grid3" style="margin-bottom:6px"><input class="input" id="s-gc${i}n" value="${esc(c.name || '')}" placeholder="Name"><input class="input" id="s-gc${i}p" value="${esc(c.phone || '')}" placeholder="+65…"><input class="input" id="s-gc${i}d" value="${esc(c.display || '')}" placeholder="+65 9383 0017"></div>`; }).join('')}</div>
       <div class="grid3"><div class="field"><label>Earliest arrival</label><input class="input" type="date" id="s-amin" value="${esc(s.arrivalMin)}"></div><div class="field"><label>Latest arrival</label><input class="input" type="date" id="s-amax" value="${esc(s.arrivalMax)}"></div><div class="field"><label>Latest departure</label><input class="input" type="date" id="s-dmax" value="${esc(s.departureMax)}"></div></div>
+      <h3 style="margin-top:18px">Hosted stay</h3><p class="hint">Shown to guests on the RSVP travel step, and used to count rooms per night on the Accommodation tab.</p>
+      <div class="grid3">${[1, 2, 3].map(g => `<div class="field"><label>${esc(Rules.GROUPS[g])}: stay from</label><input class="input" type="date" id="s-sf${g}" value="${esc((s.stayFrom || {})[g] || '')}"></div>`).join('')}</div>
+      <div class="grid3"><div class="field"><label>Check-out date</label><input class="input" type="date" id="s-su" value="${esc(s.stayUntil || '')}"></div><div class="field"><label>Check-out time</label><input class="input" type="time" id="s-ct" value="${esc(s.checkoutTime || '12:00')}"></div><div class="field"><label>Guests per room (estimate)</label><input class="input" type="number" min="1" max="6" id="s-occ" value="${esc(s.roomOccupancy || 2)}"></div></div>
       <button class="btn" data-a="savesettings">Save settings</button></div>
       <div class="cardx"><h3>Exports & backups</h3><p class="hint">CSV files open in Excel / Google Sheets. Take a JSON backup weekly and before any big edit.</p>
         <div class="btnrow" style="flex-wrap:wrap;justify-content:flex-start"><button class="btn ghost" data-dl="responses">All responses CSV</button><button class="btn ghost" data-dl="guests">Guest list CSV</button><button class="btn ghost" data-dl="nights">Nights CSV</button><button class="btn ghost" data-a="backup">Full JSON backup</button></div></div>
@@ -219,7 +232,9 @@
       const s = { deadline: $('#s-deadline').value + ':59+05:30', adminOverrideOpen: $('#s-override').checked, allowEditsAfterDeadline: $('#s-edits').checked,
         helpPhone: '+' + $('#s-phone').value.replace(/\D/g, ''), helpPhoneDisplay: $('#s-phoned').value.trim(), mapsUrl: $('#s-maps').value.trim(),
         guideContacts: [0, 1].map(i => ({ name: $('#s-gc' + i + 'n').value.trim(), phone: '+' + $('#s-gc' + i + 'p').value.replace(/\D/g, ''), display: $('#s-gc' + i + 'd').value.trim() })).filter(c => c.name && c.phone.length > 6),
-        arrivalMin: $('#s-amin').value, arrivalMax: $('#s-amax').value, departureMax: $('#s-dmax').value };
+        arrivalMin: $('#s-amin').value, arrivalMax: $('#s-amax').value, departureMax: $('#s-dmax').value,
+        stayFrom: Object.fromEntries([1, 2, 3].map(g => [g, $('#s-sf' + g).value]).filter(x => x[1])), stayUntil: $('#s-su').value, checkoutTime: $('#s-ct').value || '12:00',
+        roomOccupancy: Math.min(6, Math.max(1, parseInt($('#s-occ').value, 10) || 2)) };
       if (!/^https:\/\//.test(s.mapsUrl)) return toast('Maps link must start with https://', true);
       const res = await call('POST', '/api/admin/content', { settings: s });
       return res.status === 200 ? (toast('Settings saved.'), load()) : toast('Save failed: ' + (res.body.error || res.status), true);

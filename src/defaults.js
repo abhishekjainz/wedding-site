@@ -12,6 +12,10 @@ const DEFAULT_SETTINGS = {
   departureMin: '2027-02-09', departureMax: '2027-02-21',
   // Groups whose RSVP is just name, WhatsApp and who's coming (no event choice, travel or music).
   simpleGroups: [4],
+  // Hosted stay at the hotel: from this date per group, until check-out at checkoutTime on stayUntil.
+  stayFrom: { 1: '2027-02-12', 2: '2027-02-12', 3: '2027-02-13' },
+  stayUntil: '2027-02-15', checkoutTime: '12:00',
+  roomOccupancy: 2, // planning estimate: guests per room (each party rounds up to whole rooms)
   fullGroups: [2, 3], // RSVP 'yes' = every event the group is invited to; no event picker, no song request
   // Personal contacts for travel planning, shown in the travel guide (only after a guest opens their invitation).
   guideContacts: [

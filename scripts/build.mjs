@@ -8,8 +8,11 @@ const rulesBrowser = `const Rules = (() => {\n${strip(R('src/rules.js'))}\nretur
 const backend = `const { Rules, createService, hashPassword, createMemoryStore } = (() => {\n${strip(R('src/rules.js'))}\n${strip(R('src/defaults.js'))}\n${strip(R('src/service.js'))}\n${strip(R('src/memory-store.js'))}\nreturn { Rules, createService, hashPassword, createMemoryStore };\n})();`;
 const web = n => R('src/web/' + n);
 
-const FONTS = 'https://fonts.googleapis.com/css2?family=MonteCarlo&family=Roboto+Serif:ital,opsz,wdth,wght@0,8..144,50..150,300..600;1,8..144,50..150,300..500&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap';
-const head = (title, css, extra = '') => `<!doctype html>
+const FONTS = 'https://fonts.googleapis.com/css2?family=MonteCarlo&family=Roboto+Serif:ital,opsz,wdth,wght@0,8..144,50..150,300..600;1,8..144,50..150,300..500&display=swap';
+// Hindi: self-hosted Tiro Devanagari Hindi, scaled up (size-adjust) so Devanagari reads as large as the English text.
+const HINDI_RANGE = 'U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF';
+const hindiFace = (normal, italic) => ['normal', 'italic'].map((st, i) => `@font-face{font-family:'Hindi';font-style:${st};font-weight:100 900;font-display:swap;size-adjust:118%;unicode-range:${HINDI_RANGE};src:url(${i ? italic : normal}) format('woff2')}`).join('');
+const head = (title, css, extra = '', fontFace = hindiFace('/assets/hindi.woff2', '/assets/hindi-italic.woff2')) => `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer">
@@ -19,11 +22,11 @@ const head = (title, css, extra = '') => `<!doctype html>
 <meta property="og:description" content="You’re invited — a private wedding invitation.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}">
-${extra}<style>${css}</style></head>`;
+${extra}<style>${fontFace}${css}</style></head>`;
 
 // ---- production site ----
 mkdirSync(new URL('../public/assets', import.meta.url), { recursive: true });
-const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-haldi.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-baraat.jpg', 'ev-phere.jpg'];
+const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-haldi.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-baraat.jpg', 'ev-phere.jpg', 'hindi.woff2', 'hindi-italic.woff2'];
 for (const f of ASSET_FILES) copyFileSync(new URL('../assets/' + f, import.meta.url), new URL('../public/assets/' + f, import.meta.url));
 W('public/app.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('guide.js'), web('guest.js'), 'GuestApp.boot();'].join('\n;\n'));
 W('public/admin.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('admin.js'), 'AdminApp.boot();'].join('\n;\n'));
@@ -32,7 +35,7 @@ W('public/index.html', `${head('Dreamy & Abhishek', web('styles.css'), '<link re
 W('public/admin.html', `${head('RSVP dashboard · Dreamy & Abhishek', web('styles.css') + web('admin.css'), '<link rel="icon" href="/assets/mono.webp">')}
 <body class="paper"><div id="app"></div><script src="/admin.js" defer></script></body></html>`);
 W('public/_headers', `/*
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   X-Frame-Options: DENY
@@ -71,12 +74,12 @@ const router = `(function () {
   show(start);
 })();`;
 mkdirSync(new URL('../dist', import.meta.url), { recursive: true });
-const MIME = { webp: 'image/webp', jpg: 'image/jpeg' };
+const MIME = { webp: 'image/webp', jpg: 'image/jpeg', woff2: 'font/woff2' };
 // header-photo.jpg is the couple's photo: preview only (on the live site it's uploaded via the dashboard and served only to invited guests)
 import { existsSync } from 'node:fs';
 const PREVIEW_ONLY = ['header-photo.jpg', 'story-1.jpg', 'story-2.jpg', 'story-3.jpg', 'story-4.jpg', 'family-story-1.jpg', 'family-story-2.jpg', 'family-story-3.jpg'].filter(f => existsSync(new URL('../assets/' + f, import.meta.url))); // optional
 const assets = Object.fromEntries([...ASSET_FILES, ...PREVIEW_ONLY].map(f => [f, `data:${MIME[f.split('.').pop()]};base64,` + readFileSync(new URL('../assets/' + f, import.meta.url)).toString('base64')]));
-W('dist/preview.html', `${head('Preview · Dreamy & Abhishek', web('styles.css') + web('admin.css'))}
+W('dist/preview.html', `${head('Preview · Dreamy & Abhishek', web('styles.css') + web('admin.css'), '', hindiFace(assets['hindi.woff2'], assets['hindi-italic.woff2']))}
 <body class="paper"><div id="app" class="app paper" aria-live="polite"></div>
 <style>:root { --tex: url(${assets['paper.jpg']}); }</style>
 <script>window.ASSETS = ${JSON.stringify(assets)};</script>

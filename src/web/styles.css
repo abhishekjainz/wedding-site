@@ -5,10 +5,10 @@
   --rose: #b4524b; --coral: #d9776a; --blush: #f2c9c0; --peach: #f4cfb0;
   --sage: #8fae8d; --teal: #5b8f7d; --teal-deep: #4a7b6b; --seafoam: #a7d0c6; --gold: #c4a27a;
   --line: #eadccd; --err: #b43f3a;
-  --serif: 'Roboto Serif', 'Tiro Devanagari Hindi', Georgia, serif;
-  --body: 'Roboto Serif', 'Tiro Devanagari Hindi', Georgia, serif;
-  --script: 'MonteCarlo', 'Tiro Devanagari Hindi', cursive;
-  --caps: 'Roboto Serif', 'Tiro Devanagari Hindi', Georgia, serif;
+  --serif: 'Roboto Serif', 'Hindi', Georgia, serif;
+  --body: 'Roboto Serif', 'Hindi', Georgia, serif;
+  --script: 'MonteCarlo', 'Hindi', cursive;
+  --caps: 'Roboto Serif', 'Hindi', Georgia, serif;
   --tex: url(/assets/paper.jpg);
   --r: 14px; --shadow: 0 1px 2px rgba(120, 80, 60, .06), 0 8px 28px rgba(150, 100, 80, .08);
 }
@@ -26,13 +26,13 @@ img { max-width: 100%; display: block; }
 
 /* typography */
 .script { font-family: var(--script); font-weight: 400; color: var(--rose); line-height: 1.15; }
-.lang-hi .script { font-family: 'Tiro Devanagari Hindi', serif; letter-spacing: 0; }
+.lang-hi .script { font-family: 'Hindi', serif; letter-spacing: 0; }
 h2.script { font-size: 52px; margin: 0; line-height: 1.1; }
 .lang-hi h2.script { font-size: 34px; }
 .caps { font: 400 11.5px/1.6 var(--caps); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
 .lang-hi .caps { letter-spacing: .04em; font-size: 14px; }
 .names { font-family: var(--script); color: var(--rose); font-size: clamp(40px, 12.5vw, 54px); white-space: nowrap; line-height: 1.1; margin: 4px 0 0; }
-.lang-hi .names { font-family: 'Tiro Devanagari Hindi', serif; font-size: 34px; }
+.lang-hi .names { font-family: 'Hindi', serif; font-size: 34px; }
 .divider { width: 110px; height: 12px; color: var(--gold); display: block; margin: 14px auto; }
 .muted { color: var(--ink-soft); }
 .center { text-align: center; }
@@ -540,3 +540,8 @@ footer p { margin: 6px 0; }
 .callout.allev ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
 .callout.allev li { display: flex; justify-content: space-between; gap: 10px; border-top: 1px dashed #cfe0d4; padding-top: 6px; }
 .callout.allev li small { white-space: nowrap; color: #5d7b6f; }
+
+.stay-note { display: flex; gap: 12px; align-items: flex-start; text-align: left; max-width: 420px; margin: 18px auto 4px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
+.stay-note svg { width: 24px; height: 24px; flex: none; color: var(--gold, #b98a5a); margin-top: 2px; }
+.stay-note b { display: block; font: 500 12px var(--caps); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 2px; }
+.lang-hi .stay-note b { letter-spacing: 0; font-size: 13px; }

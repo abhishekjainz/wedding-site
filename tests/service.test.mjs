@@ -183,3 +183,16 @@ test('admin manual WhatsApp entry with travel TBD', async () => {
   const d = (await svc.adminData({}, { ip: 'a', sessions: { admin } })).body;
   assert.equal(d.submissions[0].arrivalDate, ''); assert.equal(d.summary.nights.length, 0); assert.equal(d.summary.totalGuests, 3);
 });
+
+test('rooms per night follow each party’s own dates inside the hosted stay', async () => {
+  const { svc, g1, g3, admin } = await setup();
+  // Friends party of 3 arriving 10 Feb (Home Days), flying out 14 Feb evening: hosted nights 12 & 13 only, 2 rooms each
+  await svc.submit(base({ arrivalDate: '2027-02-10', departureDate: '2027-02-14', departureWindow: 'eve' }), ctx(g1, 'a'));
+  // Family & Guests couple 13 → 15 Feb afternoon: hosted 13 & 14, late check-out
+  await svc.submit(base({ primaryName: 'Neha Shah', phoneNumber: '9811100000', partySize: 2, guests: ['Neha Shah', 'Raj Shah'], arrivalDate: '2027-02-13', arrivalWindow: 'am', departureDate: '2027-02-15', departureWindow: 'mid', events: [] }), ctx(g3, 'b'));
+  const d = (await svc.adminData({}, { ip: 'x', sessions: { admin } })).body.summary;
+  assert.deepEqual(d.roomNights.map(n => [n.date, n.rooms, n.guests]), [['2027-02-12', 2, 3], ['2027-02-13', 3, 5], ['2027-02-14', 1, 2]]);
+  const early = d.stayExceptions.find(x => x.name === 'Asha Mehta'); assert.deepEqual(early.before, ['2027-02-10', '2027-02-11']);
+  assert.ok(d.stayExceptions.find(x => x.name === 'Neha Shah').lateCheckout);
+  const site = (await svc.site({}, ctx(g3))).body.settings; assert.equal(site.stayFrom, '2027-02-13'); assert.equal(site.stayUntil, '2027-02-15');
+});

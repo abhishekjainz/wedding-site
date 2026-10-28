@@ -176,7 +176,32 @@ function findDuplicate(submissions, v, excludeId) {
     (s.phone === v.phone || [s.primaryName, ...(s.guests || [])].some(n => names.has(normKey(n))))) || null;
 }
 
-function summarize(submissions, events) {
+// Hotel stay for one party: which nights fall inside the hosted window for their group, which are outside it
+// (they arrive earlier or leave later), and whether they leave after check-out time on the last day.
+const addDay = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+function stayFor(s, settings) {
+  const from = ((settings && settings.stayFrom) || {})[s.group], until = settings && settings.stayUntil;
+  const out = { hosted: [], before: [], after: [], lateCheckout: false, hostedGroup: !!(from && until) };
+  if (s.status !== 'accept' || !isDate(s.arrivalDate) || !isDate(s.departureDate) || !out.hostedGroup) return out;
+  for (let d = s.arrivalDate; d < s.departureDate; d = addDay(d, 1)) (d < from ? out.before : d >= until ? out.after : out.hosted).push(d);
+  out.lateCheckout = s.departureDate === until && !!s.departureWindow && s.departureWindow !== 'am';
+  return out;
+}
+const roomsFor = (s, settings) => Math.max(1, Math.ceil((s.guests || []).length / ((settings && settings.roomOccupancy) || 2)));
+// Rooms needed per hosted night, from each party's own arrival and departure (nobody is counted after they've left).
+function roomNights(submissions, settings) {
+  const nights = {};
+  for (const s of submissions) {
+    const st = stayFor(s, settings);
+    for (const d of st.hosted) {
+      const n = nights[d] = nights[d] || { date: d, rooms: 0, guests: 0, parties: 0 };
+      n.rooms += roomsFor(s, settings); n.guests += s.guests.length; n.parties += 1;
+    }
+  }
+  return Object.values(nights).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function summarize(submissions, events, settings) {
   const acc = submissions.filter(s => s.status === 'accept');
   const perEvent = eventOptions(events).map(o => ({
     id: o.id, title: o.title.en, date: o.date, multi: !!o.multi,
@@ -201,6 +226,11 @@ function summarize(submissions, events) {
     perEvent, byGroup,
     arrivals: dist('arrival'), departures: dist('departure'),
     nights: guestNights(submissions),
+    roomNights: roomNights(submissions, settings),
+    stayExceptions: submissions.filter(s => s.status === 'accept').map(s => ({ s, st: stayFor(s, settings) }))
+      .filter(x => x.st.before.length || x.st.after.length || x.st.lateCheckout)
+      .map(({ s, st }) => ({ id: s.id, name: s.primaryName, group: s.group, guests: s.guests.length, before: st.before, after: st.after, lateCheckout: st.lateCheckout,
+        departure: s.departureDate, departureWindow: s.departureWindow })),
     duplicates: duplicateFlags(submissions),
   };
 }
@@ -216,7 +246,7 @@ function toCsv(rows) {
 
 const WINDOW_LABEL = { am: 'Before noon', mid: 'Noon–5 PM', eve: '5–9 PM', night: 'After 9 PM' };
 
-function exportCsv(type, submissions, events) {
+function exportCsv(type, submissions, events, settings) {
   if (type === 'guests') {
     const rows = [['Guest full name', 'Party ID', 'Primary contact', 'WhatsApp', 'Group', 'Events', 'Arrival date', 'Arrival window', 'Departure date', 'Departure window']];
     submissions.filter(s => s.status === 'accept').forEach(s => s.guests.forEach(g => rows.push([
@@ -225,7 +255,9 @@ function exportCsv(type, submissions, events) {
     return toCsv(rows);
   }
   if (type === 'nights') {
-    return toCsv([['Night of', 'Guests staying (guest-nights)'], ...guestNights(submissions).map(n => [n.date, n.guests])]);
+    const rn = Object.fromEntries(roomNights(submissions, settings).map(n => [n.date, n]));
+    return toCsv([['Night of', 'Guests in Indore (all)', 'Hosted guests', 'Hosted parties', `Rooms needed (≈${(settings && settings.roomOccupancy) || 2} per room)`],
+      ...guestNights(submissions).map(n => [n.date, n.guests, (rn[n.date] || {}).guests || 0, (rn[n.date] || {}).parties || 0, (rn[n.date] || {}).rooms || 0])]);
   }
   const rows = [['Party ID', 'Submitted', 'Updated', 'Source', 'Group', 'Status', 'Primary contact', 'WhatsApp', 'Party size', 'Guest names',
     ...eventOptions(events).map(o => o.multi ? `${o.title.en} (${o.date})` : o.title.en), 'Arrival date', 'Arrival window', 'Departure date', 'Departure window',
@@ -237,7 +269,7 @@ function exportCsv(type, submissions, events) {
   return toCsv(rows);
 }
 
-const Rules = { WINDOWS, WINDOW_LABEL, GROUPS, GROUP_IDS, eventDays, eventOptions, isSimpleGroup, isFullGroup,
+const Rules = { WINDOWS, WINDOW_LABEL, GROUPS, GROUP_IDS, eventDays, eventOptions, isSimpleGroup, isFullGroup, stayFor, roomNights,
   clean, isFullName, normalizePhone, isOpen, eligibleEvents, validateRsvp, guestNights,
   duplicateFlags, findDuplicate, summarize, exportCsv, toCsv };
 export default Rules; // @@strip-for-browser

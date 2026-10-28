@@ -96,6 +96,7 @@ function createService(store, config) {
         editsOpen: Rules.isOpen(settings) || settings.allowEditsAfterDeadline, simple: Rules.isSimpleGroup(settings, group),
         simpleGroups: Rules.isSimpleGroup(settings, group) ? [group] : [],
         full: Rules.isFullGroup(settings, group), fullGroups: Rules.isFullGroup(settings, group) ? [group] : [],
+        stayFrom: ((settings.stayFrom || {})[group]) || '', stayUntil: settings.stayUntil || '', checkoutTime: settings.checkoutTime || '12:00',
         guideContacts: (settings.guideContacts || []).filter(c => c && c.name && c.phone) },
     };
   }
@@ -176,7 +177,7 @@ function createService(store, config) {
     async adminData(_, ctx) {
       if (!(await isAdmin(ctx.sessions.admin))) return err(401, 'noAdmin');
       const [subs, events, content, settings] = await Promise.all([store.listSubmissions(), store.getEvents(), store.getContent(), store.getSettings()]);
-      return ok({ submissions: subs.map(({ editTokenHash, ...s }) => s), events, content, settings, summary: Rules.summarize(subs, events), open: Rules.isOpen(settings) });
+      return ok({ submissions: subs.map(({ editTokenHash, ...s }) => s), events, content, settings, summary: Rules.summarize(subs, events, settings), open: Rules.isOpen(settings) });
     },
 
     async adminSaveSubmission({ id, data }, ctx) {
@@ -235,8 +236,8 @@ function createService(store, config) {
 
     async adminExport({ type }, ctx) {
       if (!(await isAdmin(ctx.sessions.admin))) return err(401, 'noAdmin');
-      const [subs, events] = await Promise.all([store.listSubmissions(), store.getEvents()]);
-      return { status: 200, csv: Rules.exportCsv(type, subs, events), filename: `rsvp-${type || 'responses'}-${new Date().toISOString().slice(0, 10)}.csv` };
+      const [subs, events, settings] = await Promise.all([store.listSubmissions(), store.getEvents(), store.getSettings()]);
+      return { status: 200, csv: Rules.exportCsv(type, subs, events, settings), filename: `rsvp-${type || 'responses'}-${new Date().toISOString().slice(0, 10)}.csv` };
     },
 
     async adminBackup(_, ctx) {

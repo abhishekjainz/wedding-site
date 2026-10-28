@@ -118,6 +118,7 @@ const Art = (() => {
     flower: '<svg viewBox="0 0 32 32" aria-hidden="true"><g transform="translate(16 15)">' + [0, 72, 144, 216, 288].map(a => `<ellipse cy="-6" rx="5" ry="6.5" transform="rotate(${a})" fill="#eea494" opacity=".75"/>`).join('') + '<circle r="3" fill="#f6d0a8"/></g><path d="M16 22v8" stroke="#8fae8d" stroke-width="1.2"/></svg>',
     copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
     replay: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4"/></svg>',
+    bed: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18V7M3 14h18v4M21 14v-2.5a2.5 2.5 0 0 0-2.5-2.5H11v5M6.5 11.5a1.5 1.5 0 1 0 0-.01" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
     photo: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="9" cy="10" r="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="m4 17 5-4 4 3 3-2 4 3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
   };
   // Dress-code illustration: a lady and a gentleman painted in the event's colours (faceless, watercolour-style).
