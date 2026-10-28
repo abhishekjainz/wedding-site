@@ -437,9 +437,7 @@
       const e = site.events[0];
       return e ? `<div class="callout" style="margin-top:22px">${esc(t.simpleInvite)} <b>${esc(L(e.title))}</b> · ${esc(fmtSpan(e))} · ${esc(fmtWhen(e))}</div>` : '';
     }
-    if (isFull()) {
-      return `<div class="callout allev" style="margin-top:22px">${esc(t.fullInvite(fmtGroupSpan()))}<ul>${site.events.map(e => `<li><b>${esc(L(e.title))}</b><small>${esc(fmtSpan(e))}</small></li>`).join('')}</ul></div>`;
-    }
+    if (isFull()) return '';
     const items = site.events.map(e => {
       const days = Rules.eventDays(e);
       if (days.length > 1) {
