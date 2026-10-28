@@ -140,9 +140,10 @@
         <label class="btn ghost small">Upload<input type="file" accept="image/*" data-up="hero" hidden></label>
         <label style="font-size:13px">Photo focus <select class="input" data-c="heroFocus" style="min-height:38px;width:auto;display:inline-block">${['top', 'middle', 'lower', 'bottom'].map(v => `<option value="${v}" ${(c.heroFocus || 'lower') === v ? 'selected' : ''}>${v}</option>`).join('')}</select></label>${c.heroImageUrl ? '<button class="linkbtn" data-rmphoto="hero">Remove</button>' : ''}</div></div>
         <p class="hint" style="margin:14px 0 8px">Our Story photos — choose 3 or 4 that really count. Portrait photos suit 1–3; photo 4 is optional and best as a wide landscape. Captions are optional (a few words, e.g. “Jaipur, 2025”).</p>
-        <div class="photos">${[0, 1, 2, 3].map(i => { const p = c.photos[i] || { url: '', caption: { en: '', hi: '' } }; c.photos[i] = p; const cap = /^(Main couple photo|Supporting photo \d)$/.test(p.caption.en) ? '' : p.caption.en; return `<div class="pslot"><b style="font-size:13px">${['1 · Large, under the heading', '2 · Left of the pair', '3 · Right of the pair', '4 · Wide, optional'][i]}</b>${p.url ? `<img src="${esc(p.url)}" alt="">` : '<div class="empty">Empty</div>'}
-          <input class="input" data-c="photos.${i}.caption.en" value="${esc(cap)}" placeholder="Caption (optional)">
-          <label class="btn ghost small">Upload<input type="file" accept="image/*" data-up="${i}" hidden></label>${p.url ? `<button class="linkbtn" data-rmphoto="${i}">Remove</button>` : ''}</div>`; }).join('')}</div></div>
+        ${[['photos', 'Friends link'], ['photosFamily', 'Close Family, Family & Guests and Other Guests links (if empty, they see the Friends photos)']].map(([key, who]) => `<p style="margin:16px 0 8px;font-size:14px"><b>${esc(who)}</b></p>
+        <div class="photos">${[0, 1, 2, 3].map(i => { c[key] = c[key] || []; const p = c[key][i] || { url: '', caption: { en: '', hi: '' } }; c[key][i] = p; const cap = /^(Main couple photo|Supporting photo \d)$/.test(p.caption.en) ? '' : p.caption.en; return `<div class="pslot"><b style="font-size:13px">${['1 · Large, under the heading', '2 · Left of the pair', '3 · Right of the pair', '4 · Wide, optional'][i]}</b>${p.url ? `<img src="${esc(p.url)}" alt="">` : '<div class="empty">Empty</div>'}
+          <input class="input" data-c="${key}.${i}.caption.en" value="${esc(cap)}" placeholder="Caption (optional)">
+          <label class="btn ghost small">Upload<input type="file" accept="image/*" data-up="${key}:${i}" hidden></label>${p.url ? `<button class="linkbtn" data-rmphoto="${key}:${i}">Remove</button>` : ''}</div>`; }).join('')}</div>`).join('')}</div>
       <div class="cardx"><h3>Venue</h3>${bi('venueName', 'Venue name', c.venueName)}${bi('venueCity', 'City line', c.venueCity)}
         <div class="field"><label>Venue photo</label><div class="pslot wide">${c.venueImageUrl ? `<img src="${esc(c.venueImageUrl.startsWith('/assets/') && window.ASSETS ? window.ASSETS[c.venueImageUrl.slice(8)] || c.venueImageUrl : c.venueImageUrl)}" alt="">` : '<div class="empty">Placeholder shown</div>'}
         <label class="btn ghost small">Upload<input type="file" accept="image/*" data-up="venue" hidden></label>${c.venueImageUrl ? '<button class="linkbtn" data-rmphoto="venue">Remove</button>' : ''}</div></div></div>
@@ -155,6 +156,7 @@
           <div class="field"><label>Invited groups</label>${Rules.GROUP_IDS.map(g => `<label class="check"><input type="checkbox" data-eg="${i}.${g}" ${e.groups.includes(g) ? 'checked' : ''}> ${esc(gname(g))}</label>`).join('')}</div>
           ${['title', 'desc', 'timeNote', 'dress', 'location'].map(k => `<div class="field"><label>${{ title: 'Title', desc: 'Description (pending family review)', timeNote: 'Time note shown instead of a clock time (multi-day events)', dress: 'Dress code: first line = theme shown on the card, then one line each, e.g. “Ladies: saree | lehenga” (blank = “to be shared soon”)', location: 'Sub-location, e.g. lawn or ballroom' }[k]}</label><div class="bi">
             ${['en', 'hi'].map(l => k === 'desc' || k === 'dress' ? `<textarea class="input" rows="${k === 'dress' ? 3 : 4}" data-e="${i}.${k}.${l}">${esc((e[k] || {})[l])}</textarea>` : `<input class="input" data-e="${i}.${k}.${l}" value="${esc((e[k] || {})[l])}" placeholder="${l.toUpperCase()}">`).join('')}</div></div>`).join('')}
+          <div class="field"><label>Dress-code colours for the outfit illustration (hex codes, comma-separated: ladies, accent, gentlemen, extra; blank = no illustration)</label><input class="input" data-epal="${i}" value="${esc((e.palette || []).join(', '))}" placeholder="#7a9a3a, #c9d96b, #a7c4a0"></div>
           <div class="field"><label>Event photo (optional, landscape works best)</label><div class="pslot wide">${e.imageUrl ? `<img src="${esc(e.imageUrl.startsWith('/assets/') && window.ASSETS ? window.ASSETS[e.imageUrl.slice(8)] || e.imageUrl : e.imageUrl)}" alt="">` : '<div class="empty">No photo — the monogram is shown</div>'}
           <label class="btn ghost small">Upload<input type="file" accept="image/*" data-up="ev:${i}" hidden></label>${e.imageUrl ? `<button class="linkbtn" data-rmphoto="ev:${i}">Remove</button>` : ''}</div></div>
           <div class="field"><label>Directions link (blank = hotel map)</label><input class="input" data-e="${i}.mapsUrl" value="${esc(e.mapsUrl)}" placeholder="https://maps.app.goo.gl/…"></div></details>`).join('')}</div>
@@ -200,7 +202,7 @@
     r.querySelectorAll('[data-dl]').forEach(b => (b.onclick = () => download(b.dataset.dl)));
     r.querySelectorAll('[data-a]').forEach(b => (b.onclick = () => action(b.dataset.a)));
     r.querySelectorAll('[data-up]').forEach(inp => (inp.onchange = () => uploadPhoto(inp)));
-    r.querySelectorAll('[data-rmphoto]').forEach(b => (b.onclick = () => { collectContent(); if (b.dataset.rmphoto.startsWith('ev:')) D.events[+b.dataset.rmphoto.slice(3)].imageUrl = ''; else if (b.dataset.rmphoto === 'venue') D.content.venueImageUrl = ''; else if (b.dataset.rmphoto === 'hero') D.content.heroImageUrl = ''; else D.content.photos[+b.dataset.rmphoto].url = ''; render(); toast('Removed — click Save content to publish.'); }));
+    r.querySelectorAll('[data-rmphoto]').forEach(b => (b.onclick = () => { collectContent(); if (b.dataset.rmphoto.startsWith('ev:')) D.events[+b.dataset.rmphoto.slice(3)].imageUrl = ''; else if (b.dataset.rmphoto === 'venue') D.content.venueImageUrl = ''; else if (b.dataset.rmphoto === 'hero') D.content.heroImageUrl = ''; else { const [k, n] = b.dataset.rmphoto.split(':'); D.content[k][+n].url = ''; } render(); toast('Removed — click Save content to publish.'); }));
   }
 
   async function action(a) {
@@ -235,6 +237,7 @@
     const set = (obj, path, val) => { const ks = path.split('.'); let o = obj; ks.slice(0, -1).forEach(k => (o = o[k] = o[k] ?? {})); o[ks[ks.length - 1]] = val; };
     root().querySelectorAll('[data-c]').forEach(i => set(D.content, i.dataset.c, i.value));
     root().querySelectorAll('[data-e]').forEach(i => set(D.events, i.dataset.e, i.value));
+    root().querySelectorAll('[data-epal]').forEach(i => { D.events[+i.dataset.epal].palette = i.value.split(/[\s,]+/).filter(x => /^#[0-9a-f]{3,8}$/i.test(x)); });
     root().querySelectorAll('[data-eg]').forEach(i => { const [idx, g] = i.dataset.eg.split('.').map(Number); const e = D.events[idx]; e.groups = e.groups.filter(x => x !== g); if (i.checked) e.groups.push(g); e.groups.sort(); });
   }
 
@@ -244,7 +247,7 @@
     const blob = await resize(file, 1600);
     const res = await window.API.upload(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
     if (res.status !== 200) return toast('Upload failed', true);
-    if (inp.dataset.up.startsWith('ev:')) D.events[+inp.dataset.up.slice(3)].imageUrl = res.body.url; else if (inp.dataset.up === 'venue') D.content.venueImageUrl = res.body.url; else if (inp.dataset.up === 'hero') D.content.heroImageUrl = res.body.url; else D.content.photos[+inp.dataset.up].url = res.body.url;
+    if (inp.dataset.up.startsWith('ev:')) D.events[+inp.dataset.up.slice(3)].imageUrl = res.body.url; else if (inp.dataset.up === 'venue') D.content.venueImageUrl = res.body.url; else if (inp.dataset.up === 'hero') D.content.heroImageUrl = res.body.url; else { const [k, n] = inp.dataset.up.split(':'); D.content[k][+n].url = res.body.url; }
     render(); toast('Uploaded — click Save content to publish.');
   }
   function resize(file, max) {

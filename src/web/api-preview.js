@@ -11,6 +11,11 @@
       const photos = [0, 1, 2, 3].map(i => { const p = (c2.photos || [])[i] || { caption: { en: '', hi: '' } }; return { ...p, url: p.url || window.ASSETS[`story-${i + 1}.jpg`] }; });
       await store.setContent({ ...c2, photos, storySeeded: true });
     }
+    const cf = await store.getContent();
+    if (!cf.familySeeded && window.ASSETS && window.ASSETS['family-story-1.jpg']) {
+      const photosFamily = [0, 1, 2, 3].map(i => { const p = (cf.photosFamily || [])[i] || { caption: { en: '', hi: '' } }; return { ...p, url: p.url || window.ASSETS[`family-story-${i + 1}.jpg`] || '' }; });
+      await store.setContent({ ...cf, photosFamily, familySeeded: true });
+    }
     const c3 = await store.getContent();
     if (!c3.venueSeeded) await store.setContent({ ...c3, venueImageUrl: c3.venueImageUrl || '/assets/venue-photo.jpg', venueSeeded: true }); })();
   const sessKey = 'wd_preview_sessions';

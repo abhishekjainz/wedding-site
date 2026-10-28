@@ -23,7 +23,7 @@ ${extra}<style>${css}</style></head>`;
 
 // ---- production site ----
 mkdirSync(new URL('../public/assets', import.meta.url), { recursive: true });
-const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-home-days.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-phere.jpg'];
+const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-haldi.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-baraat.jpg', 'ev-phere.jpg'];
 for (const f of ASSET_FILES) copyFileSync(new URL('../assets/' + f, import.meta.url), new URL('../public/assets/' + f, import.meta.url));
 W('public/app.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('guide.js'), web('guest.js'), 'GuestApp.boot();'].join('\n;\n'));
 W('public/admin.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('admin.js'), 'AdminApp.boot();'].join('\n;\n'));
@@ -74,7 +74,7 @@ mkdirSync(new URL('../dist', import.meta.url), { recursive: true });
 const MIME = { webp: 'image/webp', jpg: 'image/jpeg' };
 // header-photo.jpg is the couple's photo: preview only (on the live site it's uploaded via the dashboard and served only to invited guests)
 import { existsSync } from 'node:fs';
-const PREVIEW_ONLY = ['header-photo.jpg', 'story-1.jpg', 'story-2.jpg', 'story-3.jpg', 'story-4.jpg'].filter(f => existsSync(new URL('../assets/' + f, import.meta.url))); // optional
+const PREVIEW_ONLY = ['header-photo.jpg', 'story-1.jpg', 'story-2.jpg', 'story-3.jpg', 'story-4.jpg', 'family-story-1.jpg', 'family-story-2.jpg', 'family-story-3.jpg'].filter(f => existsSync(new URL('../assets/' + f, import.meta.url))); // optional
 const assets = Object.fromEntries([...ASSET_FILES, ...PREVIEW_ONLY].map(f => [f, `data:${MIME[f.split('.').pop()]};base64,` + readFileSync(new URL('../assets/' + f, import.meta.url)).toString('base64')]));
 W('dist/preview.html', `${head('Preview · Dreamy & Abhishek', web('styles.css') + web('admin.css'))}
 <body class="paper"><div id="app" class="app paper" aria-live="polite"></div>

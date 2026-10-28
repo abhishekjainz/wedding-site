@@ -52,6 +52,7 @@ function eventOptions(events) {
 }
 
 const isSimpleGroup = (settings, group) => (settings.simpleGroups || []).includes(Number(group));
+const isFullGroup = (settings, group) => (settings.fullGroups || []).includes(Number(group));
 
 /**
  * Validate a guest RSVP payload. Never trusts the client: group comes from the
@@ -96,7 +97,8 @@ function validateRsvp(input, { group, events, settings }) {
     const allowed = new Set(options);
     const simple = isSimpleGroup(settings, group);
     const picked = Array.isArray(input.events) ? [...new Set(input.events.map(String))] : [];
-    if (simple) v.events = options; // e.g. reception-only guests: attending means the event(s) they're invited to
+    const full = !simple && isFullGroup(settings, group);
+    if (simple || full) v.events = options; // attending means every event the group is invited to
     else {
       if (picked.some(id => !allowed.has(id))) errors.events = 'eventForbidden';
       else if (picked.length === 0) errors.events = 'eventsMin';
@@ -124,9 +126,9 @@ function validateRsvp(input, { group, events, settings }) {
       }
     }
 
-    v.songName = clean(input.songName, 120);
-    v.songArtist = clean(input.songArtist, 120);
-    v.songUrl = clean(input.songUrl, 300);
+    v.songName = full ? '' : clean(input.songName, 120);
+    v.songArtist = full ? '' : clean(input.songArtist, 120);
+    v.songUrl = full ? '' : clean(input.songUrl, 300);
     if (v.songUrl && !/^https:\/\/[^\s<>"']+\.[^\s<>"']+$/i.test(v.songUrl)) errors.songUrl = 'url';
     v.questions = clean(input.questions, 1500);
   } else {
@@ -235,7 +237,7 @@ function exportCsv(type, submissions, events) {
   return toCsv(rows);
 }
 
-const Rules = { WINDOWS, WINDOW_LABEL, GROUPS, GROUP_IDS, eventDays, eventOptions, isSimpleGroup,
+const Rules = { WINDOWS, WINDOW_LABEL, GROUPS, GROUP_IDS, eventDays, eventOptions, isSimpleGroup, isFullGroup,
   clean, isFullName, normalizePhone, isOpen, eligibleEvents, validateRsvp, guestNights,
   duplicateFlags, findDuplicate, summarize, exportCsv, toCsv };
 export default Rules; // @@strip-for-browser

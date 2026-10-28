@@ -31,15 +31,18 @@ test('four access codes map to four groups with the right events; wrong code rej
 });
 
 test('crafted requests for events outside the group are rejected server-side', async () => {
-  const { svc, g2, g3 } = await setup();
-  let r = await svc.submit(base({ events: ['mehendi', 'haldi'] }), ctx(g3));
+  const { svc, g1, g2, g3 } = await setup();
+  let r = await svc.submit(base({ events: ['not-an-event', 'haldi'] }), ctx(g1));
   assert.equal(r.status, 422); assert.equal(r.body.fields.events, 'eventForbidden');
-  r = await svc.submit(base({ events: ['home-days@2027-02-10'] }), ctx(g2));
-  assert.equal(r.body.fields.events, 'eventForbidden', 'close family cannot pick home days');
-  r = await svc.submit(base({ events: ['home-days'] }), ctx(g2));
-  assert.equal(r.body.fields.events, 'eventForbidden');
-  const ok = await svc.submit(base({ events: ['haldi'] }), ctx(g3));
-  assert.equal(ok.status, 200); assert.equal(ok.body.submission.group, 3);
+  // Close Family and Family & Guests don't pick events: yes = every event their link covers, whatever is sent
+  r = await svc.submit(base({ events: ['mehendi', 'home-days@2027-02-10'], songName: 'X' }), ctx(g3));
+  assert.equal(r.status, 200); assert.equal(r.body.submission.group, 3);
+  assert.ok(!r.body.submission.events.includes('mehendi') && !r.body.submission.events.some(e => e.startsWith('home-days')));
+  assert.ok(r.body.submission.events.includes('reception') && r.body.submission.events.includes('closing-dinner'));
+  assert.equal(r.body.submission.songName, '', 'no song request for family groups');
+  const r2 = await svc.submit(base({ phoneNumber: '9811112222', primaryName: 'Other Person', guests: ['Other Person'], partySize: 1, events: [] }), ctx(g2));
+  assert.equal(r2.status, 200, JSON.stringify(r2.body)); assert.ok(r2.body.submission.events.includes('mehendi'));
+  assert.ok(!r2.body.submission.events.some(e => e.startsWith('home-days')), 'close family never get home days');
 });
 
 test('friends pick individual Home Days; counted day by day', async () => {

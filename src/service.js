@@ -76,17 +76,26 @@ function createService(store, config) {
     return !!(p && p.t === 'a');
   }
 
+  // Friends (group 1) see the main Our Story photos; everyone else sees the family set when one is uploaded.
+  // Only the set for the guest's own group is ever sent to their browser.
+  function storyFor(content, group) {
+    const { photosFamily, ...rest } = content;
+    const fam = (photosFamily || []).filter(p => p && p.url);
+    return Number(group) === 1 || !fam.length ? rest : { ...rest, photos: photosFamily };
+  }
+
   async function siteFor(group) {
     const [content, events, settings] = await Promise.all([store.getContent(), store.getEvents(), store.getSettings()]);
     return {
       group,
-      content,
+      content: storyFor(content, group),
       events: Rules.eligibleEvents(events, group),
       settings: { deadline: settings.deadline, open: Rules.isOpen(settings), helpPhone: settings.helpPhone,
         helpPhoneDisplay: settings.helpPhoneDisplay, mapsUrl: settings.mapsUrl, maxParty: settings.maxParty,
         arrivalMin: settings.arrivalMin, arrivalMax: settings.arrivalMax, departureMin: settings.departureMin, departureMax: settings.departureMax,
         editsOpen: Rules.isOpen(settings) || settings.allowEditsAfterDeadline, simple: Rules.isSimpleGroup(settings, group),
         simpleGroups: Rules.isSimpleGroup(settings, group) ? [group] : [],
+        full: Rules.isFullGroup(settings, group), fullGroups: Rules.isFullGroup(settings, group) ? [group] : [],
         guideContacts: (settings.guideContacts || []).filter(c => c && c.name && c.phone) },
     };
   }

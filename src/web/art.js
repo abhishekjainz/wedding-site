@@ -120,5 +120,43 @@ const Art = (() => {
     replay: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4"/></svg>',
     photo: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="9" cy="10" r="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="m4 17 5-4 4 3 3-2 4 3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
   };
-  return { defs, corner, rose, rajwada, seal, divider, arch, icon };
+  // Dress-code illustration: a lady and a gentleman painted in the event's colours (faceless, watercolour-style).
+  // palette = [ladies' outfit, accent / dupatta, gentlemen's outfit, extra]
+  function outfits(palette, uid) {
+    const P = (palette || []).filter(c => /^#[0-9a-f]{3,8}$/i.test(c));
+    if (!P.length) return '';
+    const c0 = P[0], c1 = P[1] || P[0], c2 = P[2] || P[1] || P[0];
+    const skin = '#e3b997', hair = '#3a2a24', f = `wc${uid}`;
+    return `<svg class="outfits" viewBox="0 0 220 210" role="img" aria-label="Suggested outfit colours">
+      <defs><filter id="${f}" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.2"/></filter>
+        <linearGradient id="${f}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient></defs>
+      <ellipse cx="110" cy="200" rx="92" ry="6" fill="#d9c8b4" opacity=".35"/>
+      <g filter="url(#${f})">
+        <!-- lady -->
+        <path d="M57 51c-6 10-9 24-12 38l5 1c3-12 6-24 11-33z M83 51c6 10 9 24 12 38l-5 1c-3-12-6-24-11-33z" fill="${skin}"/>
+        <path d="M60 46h20l4 32H56z" fill="${c1}"/>
+        <path d="M57 76h26l30 118c-28 9-62 9-86 0z" fill="${c0}"/>
+        <path d="M57 76h26l30 118c-28 9-62 9-86 0z" fill="url(#${f}g)"/>
+        <path d="M30 186c26 8 56 8 82 0" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round"/>
+        <path d="M78 46c10 30-4 62-36 86l-6-6c26-20 38-46 34-78z" fill="${c1}" opacity=".82"/>
+        <rect x="66" y="35" width="8" height="12" rx="3" fill="${skin}"/>
+        <circle cx="70" cy="27" r="10" fill="${skin}"/>
+        <path d="M59 27c0-9 5-14 11-14s11 5 11 14c-3-6-8-8-11-8s-8 2-11 8z" fill="${hair}"/><circle cx="79" cy="19" r="5" fill="${hair}"/>
+        <!-- gentleman -->
+        <path d="M137 50c-5 12-7 30-8 48h6c1-16 3-32 7-44z M183 50c5 12 7 30 8 48h-6c-1-16-3-32-7-44z" fill="${c2}"/>
+        <circle cx="132" cy="100" r="3.6" fill="${skin}"/><circle cx="188" cy="100" r="3.6" fill="${skin}"/>
+        <path d="M143 135h13l-1 58h-11z M164 135h13l-1 58h-11z" fill="#efe6da"/>
+        <path d="M140 45h40l6 96h-52z" fill="${c2}"/>
+        <path d="M140 45h40l6 96h-52z" fill="url(#${f}g)"/>
+        <path d="M160 47v42" stroke="${c1}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M134 141h52" stroke="${c1}" stroke-width="2.5" opacity=".7"/>
+        <path d="M141 194h15M164 194h15" stroke="#6b4a3a" stroke-width="4" stroke-linecap="round"/>
+        <rect x="156" y="34" width="8" height="12" rx="3" fill="${skin}"/>
+        <circle cx="160" cy="25" r="10.5" fill="${skin}"/>
+        <path d="M149.5 24c0-9 5-13 10.5-13s10.5 4 10.5 13c-3-5-6-7-10.5-7s-7.5 2-10.5 7z" fill="${hair}"/>
+      </g>
+    </svg>
+    <div class="swatches">${P.map(c => `<i style="background:${c}"></i>`).join('')}</div>`;
+  }
+  return { defs, corner, rose, rajwada, seal, divider, arch, icon, outfits };
 })();

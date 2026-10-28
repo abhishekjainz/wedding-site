@@ -27,6 +27,10 @@
     return `${h12}:${mm} ${h < 12 ? 'AM' : 'PM'}`;
   }
   // "Tue 9 – Thu 11 Feb" / "Tuesday 9 – Thursday 11 February 2027" for multi-day events
+  function fmtGroupSpan() {
+    const ds = site.events.flatMap(e => Rules.eventDays(e)).sort();
+    return ds.length ? fmtSpan({ date: ds[0], endDate: ds[ds.length - 1] }) : '';
+  }
   function fmtSpan(e, long) {
     if (!e.endDate || e.endDate <= e.date) return fmtDate(e.date, long);
     const a = dObj(e.date), b = dObj(e.endDate), t = T();
@@ -174,19 +178,18 @@
   }
   const dressLines = e => (L(e.dress) || '').split('\n').map(x => x.trim()).filter(Boolean);
   const dressTheme = e => dressLines(e)[0] || T().toBeShared;
-  const evPhoto = e => (e.imageUrl ? `<span class="ephoto"><img src="${esc(media(e.imageUrl))}" alt="" loading="lazy"></span>` : '');
   function eventCard(e) {
     const t = T();
     if (e.endDate && e.endDate > e.date) {
       const a = dObj(e.date), b = dObj(e.endDate);
-      return `<button class="ecard${e.imageUrl ? ' has-photo' : ''}" data-event="${esc(e.id)}">${evPhoto(e)}
+      return `<button class="ecard" data-event="${esc(e.id)}">
       <div class="time"><b>${a.getUTCDate()}–${b.getUTCDate()}</b><small>${esc(t.monthShort[b.getUTCMonth()])}</small></div>
       <div><h3>${esc(L(e.title))}</h3><p>${esc(L(e.desc))}</p>
       <div class="chips">${L(e.timeNote) ? `<span class="chip">${Art.icon.clock}${esc(L(e.timeNote))}</span>` : ''}<span class="chip">${Art.icon.pin}${esc(L(e.location) || L(site.content.venueName))}</span></div></div></button>`;
     }
     const time = fmtTime(e.start).split(' ');
     const timeHtml = lang === 'hi' ? `<b>${esc(time[1])}</b><small>${esc(time[0])}</small>` : `<b>${esc(time[0])}</b><small>${esc(time[1])}</small>`;
-    return `<button class="ecard${e.imageUrl ? ' has-photo' : ''}" data-event="${esc(e.id)}">${evPhoto(e)}
+    return `<button class="ecard" data-event="${esc(e.id)}">
       <div class="time">${timeHtml}<span class="until">${e.end ? '– ' + esc(fmtTime(e.end)) : esc(t.onwards)}</span></div>
       <div><h3>${esc(L(e.title))}</h3><p>${esc(L(e.desc))}</p>
       <div class="chips"><span class="chip">${Art.icon.dress}${esc(dressTheme(e))}</span><span class="chip">${Art.icon.pin}${esc(L(e.location) || L(site.content.venueName))}</span></div></div></button>`;
@@ -351,7 +354,7 @@
       ${e.imageUrl ? `<div class="detail-hero photo"><img src="${esc(media(e.imageUrl))}" alt="${esc(L(e.title))}"></div>` : `<div class="detail-hero">${Art.corner('tl sm')}${Art.corner('br sm', 1)}<img src="${LOGO}" alt="" style="width:110px;opacity:.9"></div>`}
       <p style="margin:0 0 6px">${esc(L(e.desc))}</p>
       <div class="infobox">${Art.icon.clock}<div><b>${esc(t.date)}</b>${esc(fmtSpan(e, true))}<br>${esc(fmtWhen(e))}${e.endDate ? `<br><span class="muted">${esc(t.comeAnyDays)}</span>` : ' IST'}</div></div>
-      <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${dressLines(e).length ? dressLines(e).map((l, i) => i === 0 ? `<span class="dress-theme">${esc(l)}</span>` : `<span class="dress-line">${l.includes(':') ? `<em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}` : esc(l)}</span>`).join('') : esc(t.toBeShared)}</div></div>
+      <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${dressLines(e).length ? dressLines(e).map((l, i) => i === 0 ? `<span class="dress-theme">${esc(l)}</span>` : `<span class="dress-line">${l.includes(':') ? `<em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}` : esc(l)}</span>`).join('') : esc(t.toBeShared)}${(e.palette || []).length ? `<div class="dress-visual">${Art.outfits(e.palette, e.id.replace(/[^a-z0-9]/gi, ''))}</div>` : ''}</div></div>
       <div class="infobox">${Art.icon.pin}<div style="flex:1"><b>${esc(t.venueLabel)}</b>${e.endDate ? esc(L(e.location) || t.toBeShared) : esc(L(site.content.venueName)) + (L(e.location) ? ' — ' + esc(L(e.location)) : `<br><span class="muted">${esc(t.toBeShared)}</span>`)}
         ${e.mapsUrl || !e.endDate ? `<br><a class="linkbtn" style="padding:8px 0 0" href="${esc(e.mapsUrl || site.settings.mapsUrl)}" target="_blank" rel="noopener">${esc(t.directions)} ${Art.icon.arrow}</a>` : ''}</div></div>
       ${site.settings.open ? `<button class="btn block" style="margin-top:22px" data-act="rsvp2">${esc(t.rsvpCta)}</button>` : ''}
@@ -387,6 +390,7 @@
     review: [],
   };
   const isSimple = () => !!(site && site.settings.simple);
+  const isFull = () => !!(site && site.settings.full); // RSVP covers every event the group is invited to
   const stepsFor = f => f.status === 'decline' ? ['details', 'review'] : isSimple() ? ['details', 'party', 'review'] : ['details', 'party', 'travel', 'review'];
   const stepKey = () => rsvp.step === 'done' ? 'done' : stepsFor(rsvp.form)[Math.min(rsvp.step, stepsFor(rsvp.form).length - 1)];
   const guestsOf = f => (f.others ? [...(f.meAttending ? [f.primaryName] : []), ...f.others] : (f.guests || []));
@@ -433,6 +437,9 @@
       const e = site.events[0];
       return e ? `<div class="callout" style="margin-top:22px">${esc(t.simpleInvite)} <b>${esc(L(e.title))}</b> · ${esc(fmtSpan(e))} · ${esc(fmtWhen(e))}</div>` : '';
     }
+    if (isFull()) {
+      return `<div class="callout allev" style="margin-top:22px">${esc(t.fullInvite(fmtGroupSpan()))}<ul>${site.events.map(e => `<li><b>${esc(L(e.title))}</b><small>${esc(fmtSpan(e))}</small></li>`).join('')}</ul></div>`;
+    }
     const items = site.events.map(e => {
       const days = Rules.eventDays(e);
       if (days.length > 1) {
@@ -470,10 +477,10 @@
       <p class="q" style="margin-top:26px">${esc(t.departure)}</p>
       <div class="${fieldCls('departureDate')}"><label for="f-dd">${esc(t.date)}</label><select class="input" id="f-dd" data-f="departureDate">${dateOptions(s.departureMin, s.departureMax, f.departureDate)}</select><p class="msg">${errMsg('departureDate')}</p></div>
       <div class="${fieldCls('departureWindow')}"><span class="label">${esc(t.timeOfDay)}</span>${pills('departureWindow', f.departureWindow)}<p class="msg">${errMsg('departureWindow')}</p></div>
-      <p class="q" style="margin-top:30px">${esc(t.song)}</p>
+      ${isFull() ? '' : `<p class="q" style="margin-top:30px">${esc(t.song)}</p>
       <div class="field"><label for="f-sn">${esc(t.songName)} <span class="muted">(${esc(t.optional)})</span></label><input class="input" id="f-sn" data-f="songName" value="${esc(f.songName)}" maxlength="120"></div>
       <div class="field"><label for="f-sa">${esc(t.artist)} <span class="muted">(${esc(t.optional)})</span></label><input class="input" id="f-sa" data-f="songArtist" value="${esc(f.songArtist)}" maxlength="120"></div>
-      <div class="${fieldCls('songUrl')}"><label for="f-su">${esc(t.songUrl)}</label><input class="input" id="f-su" data-f="songUrl" value="${esc(f.songUrl)}" inputmode="url" maxlength="300" placeholder="https://"><p class="msg">${errMsg('songUrl')}</p></div>
+      <div class="${fieldCls('songUrl')}"><label for="f-su">${esc(t.songUrl)}</label><input class="input" id="f-su" data-f="songUrl" value="${esc(f.songUrl)}" inputmode="url" maxlength="300" placeholder="https://"><p class="msg">${errMsg('songUrl')}</p></div>`}
       <div class="field" style="margin-top:26px"><label for="f-q" class="q" style="font:500 20px/1.35 var(--serif);color:var(--ink)">${esc(t.questions)}</label><textarea class="input" id="f-q" data-f="questions" maxlength="1500">${esc(f.questions)}</textarea></div>`;
     return reviewHtml();
   }
@@ -500,7 +507,7 @@
     let rows = row(t.rsvpTitle, `<b>${esc(f.status === 'accept' ? t.attending : t.notAttending)}</b>`, at('details')) + row(t.primaryName, esc(f.primaryName), at('details')) + row(t.whatsapp, esc(phone), at('details'));
     if (f.status === 'accept') {
       rows += row(`${t.guests} (${guests.length})`, guests.map(esc).join('<br>'), at('party'))
-        + row(t.events, isSimple() ? site.events.map(e => esc(L(e.title))).join('<br>') : eventsSummary(f.events), isSimple() ? -1 : at('party'));
+        + row(t.events, isSimple() || isFull() ? site.events.map(e => esc(L(e.title))).join('<br>') : eventsSummary(f.events), isSimple() || isFull() ? -1 : at('party'));
       if (!isSimple()) rows += row(t.travel, travel, at('travel'))
         + (f.songName || f.songArtist ? row('♪', esc([f.songName, f.songArtist].filter(Boolean).join(' — ')) + (f.songUrl ? `<br><small class="muted">${esc(f.songUrl)}</small>` : ''), at('travel')) : '')
         + (f.questions ? row(t.message, esc(f.questions), at('travel')) : '');
@@ -529,7 +536,7 @@
       <header><button class="iconbtn" data-rsvp="close" aria-label="${esc(t.cancel)}">${Art.icon.close}</button>${langToggle()}</header>
       <div class="center"><h2 class="script" style="font-size:${lang === 'hi' ? 32 : 40}px">${esc(t.rsvpTitle)}</h2>
         <p class="caps" style="margin:4px 0 0">${esc(rsvp.mode === 'edit' ? t.editing : t.rsvpSub)}</p></div>
-      <div class="stepper" aria-hidden="true">${steps.map((k, i) => `<div class="${i === cur ? 'on' : i < cur ? 'done' : ''}"><i>${i < cur ? '✓' : i + 1}</i>${esc(t.stepNames[k])}</div>`).join('')}</div>
+      <div class="stepper" aria-hidden="true">${steps.map((k, i) => `<div class="${i === cur ? 'on' : i < cur ? 'done' : ''}"><i>${i < cur ? '✓' : i + 1}</i>${esc(t.stepNames[k === 'travel' && isFull() ? 'travelOnly' : k])}</div>`).join('')}</div>
       <form class="form" novalidate>${stepBody()}
         ${rsvp.formErr ? `<p class="formerr" role="alert">${esc(rsvp.formErr)}</p>` : ''}
         <div class="btnrow">${cur > 0 ? `<button type="button" class="btn ghost" data-rsvp="back">${Art.icon.back} ${esc(t.back)}</button>` : ''}

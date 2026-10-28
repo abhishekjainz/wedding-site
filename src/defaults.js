@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS = {
   departureMin: '2027-02-09', departureMax: '2027-02-21',
   // Groups whose RSVP is just name, WhatsApp and who's coming (no event choice, travel or music).
   simpleGroups: [4],
+  fullGroups: [2, 3], // RSVP 'yes' = every event the group is invited to; no event picker, no song request
   // Personal contacts for travel planning, shown in the travel guide (only after a guest opens their invitation).
   guideContacts: [
     { name: 'Dreamy', phone: '+917828643140', display: '+91 78286 43140' },
@@ -41,6 +42,13 @@ const DEFAULT_CONTENT = {
     { slot: 'b', url: '', caption: { en: '', hi: '' } },
     { slot: 'wide', url: '', caption: { en: '', hi: '' } },
   ],
+  // Our Story photos shown on the Close Family, Family & Guests and Other Guests links (Friends see `photos`).
+  photosFamily: [
+    { slot: 'hero', url: '', caption: { en: '', hi: '' } },
+    { slot: 'a', url: '', caption: { en: '', hi: '' } },
+    { slot: 'b', url: '', caption: { en: '', hi: '' } },
+    { slot: 'wide', url: '', caption: { en: '', hi: '' } },
+  ],
   heroImageUrl: '',  // couple's own photo for the welcome section
   venueImageUrl: '/assets/venue-photo.jpg', // Essentia Luxury Hotel Indore, photo supplied by the couple
 };
@@ -61,17 +69,45 @@ const EVENT_DRESS = {
   phere: { en: 'Traditional finery: jewel tones\nLadies: saree | lehenga\nGentlemen: sherwani | bandhgala', hi: 'पारंपरिक शान: गहरे, रत्न जैसे रंग\nमहिलाएँ: साड़ी | लहंगा\nपुरुष: शेरवानी | बंदगला' },
   'closing-dinner': { en: 'Glitz & glam\nLadies: indo-western\nGentlemen: indo-western', hi: 'चमक-दमक\nमहिलाएँ: इंडो-वेस्टर्न\nपुरुष: इंडो-वेस्टर्न' },
 };
-const EVENT_IMAGES = { 'home-days': '/assets/ev-home-days.jpg', mehendi: '/assets/ev-mehendi.jpg', reception: '/assets/ev-reception.jpg', phere: '/assets/ev-phere.jpg' };
-const EVENTS_VERSION = 2;
-// Events saved before version 2 get the suggested dress codes and photos (only where those are still empty).
+const EVENT_IMAGES = { haldi: '/assets/ev-haldi.jpg', mehendi: '/assets/ev-mehendi.jpg', reception: '/assets/ev-reception.jpg', baraat: '/assets/ev-baraat.jpg', phere: '/assets/ev-phere.jpg' };
+// Colours for the dress-code illustration: [ladies' outfit, accent / dupatta, gentlemen's outfit, extra swatch…]
+const EVENT_PALETTES = {
+  'home-days': ['#e9c9b4', '#9fbfae', '#e8dccb', '#c98f74'],
+  mehendi: ['#7a9a3a', '#c9d96b', '#a7c4a0', '#2f5d3a'],
+  'bride-mayara': ['#c2185b', '#f2a900', '#7b3fa0', '#1f7a8c'],
+  haldi: ['#f4c20d', '#f08a24', '#fbe3a0', '#fff1c7'],
+  'groom-mayara': ['#c2185b', '#f2a900', '#7b3fa0', '#1f7a8c'],
+  reception: ['#9b1b30', '#c9a14a', '#1f1f24', '#f2e6d0'],
+  baraat: ['#f3c1cc', '#f8dfae', '#cfe4d8', '#c9d3ef'],
+  phere: ['#8c1c3c', '#c9a14a', '#0f5e4f', '#1f3a7a'],
+  'closing-dinner': ['#b9bcc6', '#d4af37', '#1c2541', '#6b3f7d'],
+};
+const EVENT_TITLES = {
+  'bride-mayara': { en: 'Bride’s Maamera', hi: 'दुल्हन का मामेरा' },
+  'groom-mayara': { en: 'Groom’s Mayra', hi: 'दूल्हे का मायरा' },
+};
+const EVENTS_VERSION = 3;
+// Events saved by an older version get the newer defaults, but only where nothing has been customised.
 function upgradeEvents(list) {
   return list.map(e => {
-    if ((e.v || 1) >= EVENTS_VERSION) return e;
-    const d = e.dress || {};
-    return { ...e, v: EVENTS_VERSION, dress: (d.en || d.hi) ? d : (EVENT_DRESS[e.id] || { en: '', hi: '' }), imageUrl: e.imageUrl || EVENT_IMAGES[e.id] || '' };
+    const v = e.v || 1;
+    if (v >= EVENTS_VERSION) return e;
+    let x = { ...e, v: EVENTS_VERSION };
+    if (v < 2) {
+      const d = x.dress || {};
+      x.dress = (d.en || d.hi) ? d : (EVENT_DRESS[x.id] || { en: '', hi: '' });
+      x.imageUrl = x.imageUrl || EVENT_IMAGES[x.id] || '';
+    }
+    if (v < 3) {
+      if (x.imageUrl === '/assets/ev-home-days.jpg') x.imageUrl = ''; // that photo is now Haldi's
+      if (!x.imageUrl && (x.id === 'haldi' || x.id === 'baraat')) x.imageUrl = EVENT_IMAGES[x.id];
+      if (!x.palette) x.palette = EVENT_PALETTES[x.id] || [];
+      const oldTitle = { 'bride-mayara': 'Bride’s Mayara', 'groom-mayara': 'Groom’s Mayara' }[x.id];
+      if (oldTitle && x.title && x.title.en === oldTitle) x.title = EVENT_TITLES[x.id];
+    }
+    return x;
   });
 }
-
 
 const DEFAULT_EVENTS = [
   { id: 'home-days', sort: 0, date: '2027-02-09', endDate: '2027-02-11', start: '12:00', end: '', groups: [1],
@@ -86,7 +122,7 @@ const DEFAULT_EVENTS = [
     desc: { en: 'An afternoon of colour, music and celebration as intricate henna designs are applied to the bride’s hands — and to anyone who would like some.',
             hi: 'रंग, संगीत और उल्लास से भरी एक दोपहर, जब दुल्हन के हाथों पर सुंदर मेहंदी रचाई जाएगी — और जो भी चाहे, वह भी मेहंदी लगवा सकता है।' } },
   { id: 'bride-mayara', sort: 2, date: '2027-02-13', start: '11:00', end: '12:30', groups: [1, 2, 3],
-    title: { en: 'Bride’s Mayara', hi: 'दुल्हन का मायरा' },
+    title: EVENT_TITLES['bride-mayara'],
     desc: { en: 'A cherished family tradition in which the bride’s maternal family arrives with gifts and blessings for her new beginning.',
             hi: 'एक प्रिय पारिवारिक परंपरा, जिसमें दुल्हन का ननिहाल उपहारों और आशीर्वाद के साथ उसके नए जीवन की शुभकामनाएँ देने आता है।' } },
   { id: 'haldi', sort: 3, date: '2027-02-13', start: '13:00', end: '16:00', groups: [1, 2, 3],
@@ -94,7 +130,7 @@ const DEFAULT_EVENTS = [
     desc: { en: 'A joyful ritual where family and friends apply turmeric paste to bless the couple with radiance and good fortune. Expect to get a little yellow!',
             hi: 'एक आनंदमय रस्म, जिसमें परिवार और मित्र जोड़े को हल्दी लगाकर सौभाग्य और निखार का आशीर्वाद देते हैं। थोड़ा पीला होने के लिए तैयार रहिए!' } },
   { id: 'groom-mayara', sort: 4, date: '2027-02-13', start: '16:30', end: '18:00', groups: [1, 2, 3],
-    title: { en: 'Groom’s Mayara', hi: 'दूल्हे का मायरा' },
+    title: EVENT_TITLES['groom-mayara'],
     desc: { en: 'The groom’s maternal family honours him with gifts and blessings, in the same warm tradition.',
             hi: 'इसी स्नेहिल परंपरा में दूल्हे का ननिहाल उपहारों और आशीर्वाद से उसका सम्मान करता है।' } },
   { id: 'reception', sort: 5, date: '2027-02-13', start: '19:30', end: '', groups: [1, 2, 3, 4],
@@ -113,7 +149,7 @@ const DEFAULT_EVENTS = [
     title: { en: 'Closing Dinner', hi: 'समापन रात्रिभोज' },
     desc: { en: 'A relaxed final dinner together to round off the celebrations.',
             hi: 'उत्सव के समापन पर साथ मिलकर एक सुकून भरा रात्रिभोज।' } },
-].map(e => ({ endDate: '', timeNote: { en: '', hi: '' }, dress: EVENT_DRESS[e.id] || { en: '', hi: '' }, imageUrl: EVENT_IMAGES[e.id] || '', location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION, ...e }));
+].map(e => ({ endDate: '', timeNote: { en: '', hi: '' }, dress: EVENT_DRESS[e.id] || { en: '', hi: '' }, imageUrl: EVENT_IMAGES[e.id] || '', palette: EVENT_PALETTES[e.id] || [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION, ...e }));
 
 
 const Defaults = { DEFAULT_SETTINGS, DEFAULT_CONTENT, DEFAULT_EVENTS, upgradeEvents };
