@@ -1,0 +1,15 @@
+name = "dreamy-abhishek-wedding"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/i/*", "/media/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wedding-rsvp"
+database_id = "REPLACE_WITH_ID_FROM_wrangler_d1_create"
+
+# Secrets (never commit): SESSION_SECRET, INVITE_CODE_GROUP1, INVITE_CODE_GROUP2, ADMIN_PASSWORD_HASH

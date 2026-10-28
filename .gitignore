@@ -1,0 +1,12 @@
+node_modules/
+.wrangler/
+.dev.vars
+public/
+dist/
+*.zip
+# the couple's personal photos and source artwork stay out of the repository:
+# on the live site they're uploaded through the dashboard and only shown to invited guests
+assets/header-photo.jpg
+assets/story-*.jpg
+assets/monogram-source.png
+assets/agency-source.png
