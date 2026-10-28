@@ -547,3 +547,5 @@ footer p { margin: 6px 0; }
 .lang-hi .stay-note b { letter-spacing: 0; font-size: 13px; }
 
 .stay-early { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); color: var(--ink-soft); }
+
+.sheet.still .panel, .sheet.still .scrim, .sheet.still .rv { animation: none !important; }

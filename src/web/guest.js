@@ -540,6 +540,7 @@
     const t = T();
     let el = $('#sheet-rsvp');
     const prevScroll = el ? el.querySelector('.panel').scrollTop : 0;
+    if (el) el.classList.add('still'); // re-rendering an open sheet: don't replay the slide-in animation (it made the page flutter)
     if (!el) {
       el = document.createElement('div'); el.className = 'sheet'; el.id = 'sheet-rsvp';
       el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', t.rsvpTitle);
