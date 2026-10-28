@@ -37,6 +37,14 @@
     const time = s.checkoutTime === '12:00' ? (lang === 'hi' ? 'दोपहर 12 बजे' : '12 noon') : fmtTime(s.checkoutTime);
     return T().stayLine(fmtDate(s.stayFrom), fmtDate(s.stayUntil), time);
   }
+  // Friends' Home Days fall before the hosted stay: say we'll help them find a hotel nearby.
+  function stayEarlyText() {
+    const s = site && site.settings; if (!s || !s.stayFrom) return '';
+    const early = site.events.filter(e => e.date < s.stayFrom);
+    if (!early.length) return '';
+    const last = early[early.length - 1];
+    return T().stayEarly(early.map(e => L(e.title)).join(', ') + ' (' + fmtSpan({ date: early[0].date, endDate: last.endDate || last.date }) + ')');
+  }
   function fmtGroupSpan() {
     const ds = site.events.flatMap(e => Rules.eventDays(e)).sort();
     return ds.length ? fmtSpan({ date: ds[0], endDate: ds[ds.length - 1] }) : '';
@@ -74,7 +82,7 @@
     rerender();
   }
   function langToggle() {
-    return `<div class="lang" role="group" aria-label="Language / भाषा"><button data-lang="en" aria-pressed="${lang === 'en'}">EN</button><span>|</span><button data-lang="hi" aria-pressed="${lang === 'hi'}" lang="hi">हिंदी</button></div>`;
+    return `<div class="lang" role="group" aria-label="Language / भाषा"><button data-lang="en" aria-pressed="${lang === 'en'}">English</button><span>|</span><button data-lang="hi" aria-pressed="${lang === 'hi'}" lang="hi">हिंदी</button></div>`;
   }
   let view = 'loading';
   function rerender() {
@@ -160,10 +168,8 @@
   }
 
   // ---------- main page ----------
-  function countdownTarget() {
-    const first = site.events[0];
-    return first ? Date.parse(`${first.date}T${first.start}:00+05:30`) : Date.parse('2027-02-12T16:00:00+05:30');
-  }
+  // Same moment for every group: the wedding itself (Phere), 14 Feb 2027, 1 PM IST.
+  const countdownTarget = () => Date.parse(site.settings.countdownTo || '2027-02-14T13:00:00+05:30');
   function tick() {
     const el = $('#countdown'); if (!el) return;
     let s = Math.max(0, Math.floor((countdownTarget() - Date.now()) / 1000));
@@ -187,7 +193,7 @@
     return `<figure class="sp ${cls} rv"><span class="sp-frame">${inner}</span>${caption}</figure>`;
   }
   const dressLines = e => (L(e.dress) || '').split('\n').map(x => x.trim()).filter(Boolean);
-  const dressTheme = e => dressLines(e)[0] || T().toBeShared;
+  const dressTheme = e => dressLines(e)[0] || T().dressSoon;
   function eventCard(e) {
     const t = T();
     if (e.endDate && e.endDate > e.date) {
@@ -281,7 +287,7 @@
         <p style="margin:8px 0 0;font:500 19px var(--serif)">${esc(L(c.venueName))}</p><p class="muted" style="margin:0">${esc(L(c.venueCity))}</p>
         <div class="venue-img" style="${c.venueImageUrl ? 'border:0' : ''}">${c.venueImageUrl ? `<img src="${esc(media(c.venueImageUrl))}" alt="${esc(L(c.venueName))}" loading="lazy">` : `<span style="margin-top:-30px">${esc(t.venuePhoto)}</span>`}
           <a class="maps" href="${esc(s.mapsUrl)}" target="_blank" rel="noopener">${Art.icon.pin} ${esc(t.openMaps)}</a></div>
-        ${stayText() ? `<div class="stay-note">${Art.icon.bed}<div><b>${esc(t.stayTitle)}</b>${esc(stayText())}</div></div>` : ''}
+        ${stayText() ? `<div class="stay-note">${Art.icon.bed}<div><b>${esc(t.stayTitle)}</b>${esc(stayText())}${stayEarlyText() ? `<span class="stay-early">${esc(stayEarlyText())}</span>` : ''}</div></div>` : ''}
         <img class="agency" src="${AGENCY}" alt="Phoenix Event Media Group" loading="lazy">
         <p class="muted" style="max-width:340px;margin:6px auto 0;font-size:16px">${esc(t.helpBody)}</p>
         <a class="help-phone" href="tel:${esc(s.helpPhone)}">${Art.icon.phone} ${esc(s.helpPhoneDisplay)}</a>
@@ -366,7 +372,7 @@
       ${e.imageUrl ? `<div class="detail-hero photo"><img src="${esc(media(e.imageUrl))}" alt="${esc(L(e.title))}"></div>` : `<div class="detail-hero">${Art.corner('tl sm')}${Art.corner('br sm', 1)}<img src="${LOGO}" alt="" style="width:110px;opacity:.9"></div>`}
       <p style="margin:0 0 6px">${esc(L(e.desc))}</p>
       <div class="infobox">${Art.icon.clock}<div><b>${esc(t.date)}</b>${esc(fmtSpan(e, true))}<br>${esc(fmtWhen(e))}${e.endDate ? `<br><span class="muted">${esc(t.comeAnyDays)}</span>` : ' IST'}</div></div>
-      <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${dressLines(e).length ? dressLines(e).map((l, i) => i === 0 ? `<span class="dress-theme">${esc(l)}</span>` : `<span class="dress-line">${l.includes(':') ? `<em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}` : esc(l)}</span>`).join('') : esc(t.toBeShared)}${(e.palette || []).length ? `<div class="dress-visual">${Art.outfits(e.palette, e.id.replace(/[^a-z0-9]/gi, ''))}</div>` : ''}</div></div>
+      <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${dressLines(e).length ? dressLines(e).map((l, i) => i === 0 ? `<span class="dress-theme">${esc(l)}</span>` : `<span class="dress-line">${l.includes(':') ? `<em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}` : esc(l)}</span>`).join('') : esc(t.dressSoonLong)}${(e.palette || []).length ? `<div class="dress-visual">${Art.outfits(e.palette, e.id.replace(/[^a-z0-9]/gi, ''))}</div>` : ''}</div></div>
       <div class="infobox">${Art.icon.pin}<div style="flex:1"><b>${esc(t.venueLabel)}</b>${e.endDate ? esc(L(e.location) || t.toBeShared) : esc(L(site.content.venueName)) + (L(e.location) ? ' — ' + esc(L(e.location)) : `<br><span class="muted">${esc(t.toBeShared)}</span>`)}
         ${e.mapsUrl || !e.endDate ? `<br><a class="linkbtn" style="padding:8px 0 0" href="${esc(e.mapsUrl || site.settings.mapsUrl)}" target="_blank" rel="noopener">${esc(t.directions)} ${Art.icon.arrow}</a>` : ''}</div></div>
       ${site.settings.open ? `<button class="btn block" style="margin-top:22px" data-act="rsvp2">${esc(t.rsvpCta)}</button>` : ''}

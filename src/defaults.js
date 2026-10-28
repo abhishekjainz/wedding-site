@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = {
   stayFrom: { 1: '2027-02-12', 2: '2027-02-12', 3: '2027-02-13' },
   stayUntil: '2027-02-15', checkoutTime: '12:00',
   roomOccupancy: 2, // planning estimate: guests per room (each party rounds up to whole rooms)
+  countdownTo: '2027-02-14T13:00:00+05:30', // the countdown on every link counts down to this moment
   defaultLang: { 1: 'en', 2: 'hi', 3: 'hi', 4: 'en' }, // language each link opens in (guests can still switch)
   guideGroups: [1], // groups that see the travel guide for international guests
   fullGroups: [2, 3], // RSVP 'yes' = every event the group is invited to; no event picker, no song request
@@ -92,7 +93,11 @@ const EVENT_TITLES = {
   'bride-mayara': { en: 'Bride’s Maamera', hi: 'दुल्हन का मामेरा' },
   'groom-mayara': { en: 'Groom’s Mayra', hi: 'दूल्हे का मायरा' },
 };
-const EVENTS_VERSION = 3;
+const HOME_DAYS_DESC = {
+  en: 'Before the big crowds arrive, come early and settle in! These days are for getting to know each other’s friends, joining a few pre-wedding functions and celebrations, practising your performances for the wedding, picking up rental Indian outfits and, of course, exploring Indore (and its legendary street food). Come for one day or all three — the more, the merrier. We’ll help you book a hotel nearby for these nights, and the dates in your RSVP help us put everyone in the same hotel.',
+  hi: 'शादी की भीड़ से पहले, जल्दी आइए और यहाँ रम जाइए! ये दिन एक-दूसरे के दोस्तों से घुलने-मिलने, शादी से पहले की कुछ रस्मों और जश्न में शामिल होने, शादी की परफ़ॉर्मेंस की तैयारी करने, किराये पर भारतीय परिधान लेने और हाँ, इंदौर (और यहाँ के मशहूर स्ट्रीट फ़ूड) की सैर के लिए हैं। एक दिन आइए या तीनों — जितने ज़्यादा, उतना मज़ा। इन रातों के लिए पास के होटल की बुकिंग में हम आपकी मदद करेंगे, और आपके आरएसवीपी की तारीख़ों से हम सबको एक ही होटल में ठहरा पाएँगे।',
+};
+const EVENTS_VERSION = 4;
 // Events saved by an older version get the newer defaults, but only where nothing has been customised.
 function upgradeEvents(list) {
   return list.map(e => {
@@ -111,16 +116,23 @@ function upgradeEvents(list) {
       const oldTitle = { 'bride-mayara': 'Bride’s Mayara', 'groom-mayara': 'Groom’s Mayara' }[x.id];
       if (oldTitle && x.title && x.title.en === oldTitle) x.title = EVENT_TITLES[x.id];
     }
+    if (v < 4) {
+      // Dress codes are on hold for now ("will be added soon"); the suggestions stay in EVENT_DRESS for later.
+      x.dress = { en: '', hi: '' }; x.palette = [];
+      if (x.id === 'home-days') {
+        if (x.desc && /^Before the big crowds arrive, come and be part of the family!/.test(x.desc.en || '')) x.desc = HOME_DAYS_DESC;
+        if (x.timeNote && x.timeNote.en === 'Lunches, dinners & everything in between') x.timeNote = { en: 'New friends, pre-wedding fun & exploring Indore', hi: 'नए दोस्त, शादी से पहले की रौनक और इंदौर की सैर' };
+      }
+    }
     return x;
   });
 }
 
 const DEFAULT_EVENTS = [
   { id: 'home-days', sort: 0, date: '2027-02-09', endDate: '2027-02-11', start: '12:00', end: '', groups: [1],
-    timeNote: { en: 'Lunches, dinners & everything in between', hi: 'दोपहर-रात का खाना और ढेर सारी मस्ती' },
+    timeNote: { en: 'New friends, pre-wedding fun & exploring Indore', hi: 'नए दोस्त, शादी से पहले की रौनक और इंदौर की सैर' },
     title: { en: 'Pre-Wedding Home Days', hi: 'शादी से पहले, घर पर' },
-    desc: { en: 'Before the big crowds arrive, come and be part of the family! Three easy, unhurried days of long home-cooked lunches and lively dinners, exploring Indore (and its legendary street food), outfit try-ons where honest opinions are very welcome, and getting to know the friends and family who mean the world to us. Come for one day or all three — the more, the merrier.',
-            hi: 'मेहमानों की भीड़ आने से पहले, आइए परिवार का हिस्सा बनिए! तीन सुकून भरे दिन — घर के बने लंबे लंच और रौनक भरे डिनर, इंदौर की सैर (और यहाँ का मशहूर स्ट्रीट फ़ूड), कपड़ों की ट्रायल जहाँ आपकी बेबाक राय का पूरा स्वागत है, और उन दोस्तों व परिवार से मिलना जो हमारे लिए सबसे ख़ास हैं। एक दिन आइए या तीनों — जितने ज़्यादा, उतना मज़ा।' },
+    desc: HOME_DAYS_DESC,
     location: { en: 'At home & around Indore', hi: 'घर पर और इंदौर में' } },
 
   { id: 'mehendi', sort: 1, date: '2027-02-12', start: '16:00', end: '', groups: [1, 2],
@@ -155,7 +167,7 @@ const DEFAULT_EVENTS = [
     title: { en: 'Closing Dinner', hi: 'समापन रात्रिभोज' },
     desc: { en: 'A relaxed final dinner together to round off the celebrations.',
             hi: 'उत्सव के समापन पर साथ मिलकर एक सुकून भरा रात्रिभोज।' } },
-].map(e => ({ endDate: '', timeNote: { en: '', hi: '' }, dress: EVENT_DRESS[e.id] || { en: '', hi: '' }, imageUrl: EVENT_IMAGES[e.id] || '', palette: EVENT_PALETTES[e.id] || [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION, ...e }));
+].map(e => ({ endDate: '', timeNote: { en: '', hi: '' }, dress: { en: '', hi: '' }, imageUrl: EVENT_IMAGES[e.id] || '', palette: [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION, ...e }));
 
 
 const Defaults = { DEFAULT_SETTINGS, DEFAULT_CONTENT, DEFAULT_EVENTS, upgradeEvents };
