@@ -202,3 +202,11 @@ test('each group link carries its default language', async () => {
   const lang = async g => (await svc.site({}, ctx(g))).body.settings.defaultLang;
   assert.deepEqual([await lang(g1), await lang(g2), await lang(g3), await lang(g4)], ['en', 'hi', 'hi', 'en']);
 });
+
+test('only Friends get the travel guide and its contacts', async () => {
+  const { svc, g1, g2, g3, g4 } = await setup();
+  for (const [g, want] of [[g1, true], [g2, false], [g3, false], [g4, false]]) {
+    const s = (await svc.site({}, ctx(g))).body.settings;
+    assert.equal(s.guide, want); assert.equal(s.guideContacts.length > 0, want);
+  }
+});

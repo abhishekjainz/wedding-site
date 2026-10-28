@@ -221,7 +221,7 @@
         ${langToggle()}
       </header>
       <div class="drawer" id="drawer"><div class="scrim" data-act="menu"></div><nav class="paper" aria-label="Sections">
-        ${Object.entries(t.nav).map(([k, v]) => `<a href="#${k}" data-act="${k === 'travel' ? 'guide' : 'nav'}">${esc(v)}${k === 'travel' ? ' ✈️' : ''}</a>`).join('')}</nav></div>
+        ${Object.entries(t.nav).filter(([k]) => k !== 'travel' || site.settings.guide).map(([k, v]) => `<a href="#${k}" data-act="${k === 'travel' ? 'guide' : 'nav'}">${esc(v)}${k === 'travel' ? ' ✈️' : ''}</a>`).join('')}</nav></div>
       <main>
       <section id="welcome" class="welcome ${c.heroImageUrl ? 'with-photo' : ''}">
         ${c.heroImageUrl ? `
@@ -268,13 +268,13 @@
         ${storedToken ? `<p style="margin:14px 0 0"><span class="muted" style="font-size:15px">${esc(t.alreadyResponded)}</span><br><button class="linkbtn" data-act="myrsvp">${esc(t.viewEdit)}</button></p>` : ''}
       </section>
 
-      <section id="travel" class="travel-teaser">
+      ${site.settings.guide ? `<section id="travel" class="travel-teaser">
         <button class="guide-card" data-act="guide">
           <span class="gc-icon" aria-hidden="true">✈️</span>
           <span class="gc-text"><span class="caps">${esc(t.guideKicker)}</span><b>${esc(t.guideTitle)}</b><small>${esc(t.guideBlurb)}</small></span>
           <span class="gc-go">${esc(t.guideOpen)} ${Art.icon.arrow}</span>
         </button>
-      </section>
+      </section>` : ''}
 
       <section id="venue">${Art.corner('tl sm')}${Art.corner('tr sm', 1)}
         <h2 class="script">${esc(t.venue)}</h2>
@@ -304,6 +304,7 @@
   // ---------- travel guide (its own page) ----------
   let mainScroll = 0;
   function renderGuide() {
+    if (!site.settings.guide) return goHome();
     if (view === 'main') mainScroll = scrollY;
     view = 'guide';
     clearInterval(timer);

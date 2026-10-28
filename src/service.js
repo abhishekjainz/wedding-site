@@ -98,7 +98,8 @@ function createService(store, config) {
         full: Rules.isFullGroup(settings, group), fullGroups: Rules.isFullGroup(settings, group) ? [group] : [],
         defaultLang: ((settings.defaultLang || {})[group]) === 'hi' ? 'hi' : 'en',
         stayFrom: ((settings.stayFrom || {})[group]) || '', stayUntil: settings.stayUntil || '', checkoutTime: settings.checkoutTime || '12:00',
-        guideContacts: (settings.guideContacts || []).filter(c => c && c.name && c.phone) },
+        guide: (settings.guideGroups || [1]).includes(Number(group)),
+        guideContacts: (settings.guideGroups || [1]).includes(Number(group)) ? (settings.guideContacts || []).filter(c => c && c.name && c.phone) : [] },
     };
   }
 

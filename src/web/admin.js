@@ -187,6 +187,8 @@
       <div class="field"><label>Travel-guide contacts (name · WhatsApp number with country code · number as displayed)</label>
         ${[0, 1].map(i => { const c = (s.guideContacts || [])[i] || {}; return `<div class="grid3" style="margin-bottom:6px"><input class="input" id="s-gc${i}n" value="${esc(c.name || '')}" placeholder="Name"><input class="input" id="s-gc${i}p" value="${esc(c.phone || '')}" placeholder="+65…"><input class="input" id="s-gc${i}d" value="${esc(c.display || '')}" placeholder="+65 9383 0017"></div>`; }).join('')}</div>
       <div class="grid3"><div class="field"><label>Earliest arrival</label><input class="input" type="date" id="s-amin" value="${esc(s.arrivalMin)}"></div><div class="field"><label>Latest arrival</label><input class="input" type="date" id="s-amax" value="${esc(s.arrivalMax)}"></div><div class="field"><label>Latest departure</label><input class="input" type="date" id="s-dmax" value="${esc(s.departureMax)}"></div></div>
+      <h3 style="margin-top:18px">Travel guide</h3><p class="hint">Which links show the international travel guide (and the travel-guide contacts).</p>
+      <div class="btnrow" style="justify-content:flex-start;gap:16px">${Rules.GROUP_IDS.map(g => `<label class="check"><input type="checkbox" id="s-guide${g}" ${(s.guideGroups || [1]).includes(g) ? 'checked' : ''}> ${esc(Rules.GROUPS[g])}</label>`).join('')}</div>
       <h3 style="margin-top:18px">Language each link opens in</h3><p class="hint">Guests can still switch with the EN | हिंदी toggle, and their choice is remembered. Adding /hi or /en to the end of a link (e.g. …/i/CODE/hi) overrides this for that link.</p>
       <div class="grid3" style="grid-template-columns:repeat(4,1fr)">${Rules.GROUP_IDS.map(g => `<div class="field"><label>${esc(Rules.GROUPS[g])}</label><select class="input" id="s-lang${g}">${['en', 'hi'].map(l => `<option value="${l}" ${((s.defaultLang || {})[g] || 'en') === l ? 'selected' : ''}>${l === 'hi' ? 'हिंदी (Hindi)' : 'English'}</option>`).join('')}</select></div>`).join('')}</div>
       <h3 style="margin-top:18px">Hosted stay</h3><p class="hint">Shown to guests on the RSVP travel step, and used to count rooms per night on the Accommodation tab.</p>
@@ -236,6 +238,7 @@
         guideContacts: [0, 1].map(i => ({ name: $('#s-gc' + i + 'n').value.trim(), phone: '+' + $('#s-gc' + i + 'p').value.replace(/\D/g, ''), display: $('#s-gc' + i + 'd').value.trim() })).filter(c => c.name && c.phone.length > 6),
         arrivalMin: $('#s-amin').value, arrivalMax: $('#s-amax').value, departureMax: $('#s-dmax').value,
         stayFrom: Object.fromEntries([1, 2, 3].map(g => [g, $('#s-sf' + g).value]).filter(x => x[1])), stayUntil: $('#s-su').value, checkoutTime: $('#s-ct').value || '12:00',
+        guideGroups: Rules.GROUP_IDS.filter(g => $('#s-guide' + g).checked),
         defaultLang: Object.fromEntries(Rules.GROUP_IDS.map(g => [g, $('#s-lang' + g).value])),
         roomOccupancy: Math.min(6, Math.max(1, parseInt($('#s-occ').value, 10) || 2)) };
       if (!/^https:\/\//.test(s.mapsUrl)) return toast('Maps link must start with https://', true);
