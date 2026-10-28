@@ -172,21 +172,24 @@
       : `<span class="sp-empty">${Art.icon.photo}<small>${esc(t.photoSlots[i])}</small></span>`;
     return `<figure class="sp ${cls} rv"><span class="sp-frame">${inner}</span>${caption}</figure>`;
   }
+  const dressLines = e => (L(e.dress) || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const dressTheme = e => dressLines(e)[0] || T().toBeShared;
+  const evPhoto = e => (e.imageUrl ? `<span class="ephoto"><img src="${esc(media(e.imageUrl))}" alt="" loading="lazy"></span>` : '');
   function eventCard(e) {
     const t = T();
     if (e.endDate && e.endDate > e.date) {
       const a = dObj(e.date), b = dObj(e.endDate);
-      return `<button class="ecard" data-event="${esc(e.id)}">
+      return `<button class="ecard${e.imageUrl ? ' has-photo' : ''}" data-event="${esc(e.id)}">${evPhoto(e)}
       <div class="time"><b>${a.getUTCDate()}–${b.getUTCDate()}</b><small>${esc(t.monthShort[b.getUTCMonth()])}</small></div>
       <div><h3>${esc(L(e.title))}</h3><p>${esc(L(e.desc))}</p>
       <div class="chips">${L(e.timeNote) ? `<span class="chip">${Art.icon.clock}${esc(L(e.timeNote))}</span>` : ''}<span class="chip">${Art.icon.pin}${esc(L(e.location) || L(site.content.venueName))}</span></div></div></button>`;
     }
     const time = fmtTime(e.start).split(' ');
     const timeHtml = lang === 'hi' ? `<b>${esc(time[1])}</b><small>${esc(time[0])}</small>` : `<b>${esc(time[0])}</b><small>${esc(time[1])}</small>`;
-    return `<button class="ecard" data-event="${esc(e.id)}">
-      <div class="time">${timeHtml}${e.end ? `<small style="display:block;margin-top:4px">– ${esc(fmtTime(e.end))}</small>` : `<small style="display:block;margin-top:4px">${esc(t.onwards)}</small>`}</div>
+    return `<button class="ecard${e.imageUrl ? ' has-photo' : ''}" data-event="${esc(e.id)}">${evPhoto(e)}
+      <div class="time">${timeHtml}<span class="until">${e.end ? '– ' + esc(fmtTime(e.end)) : esc(t.onwards)}</span></div>
       <div><h3>${esc(L(e.title))}</h3><p>${esc(L(e.desc))}</p>
-      <div class="chips"><span class="chip">${Art.icon.dress}${esc(L(e.dress) || t.toBeShared)}</span><span class="chip">${Art.icon.pin}${esc(L(e.location) || L(site.content.venueName))}</span></div></div></button>`;
+      <div class="chips"><span class="chip">${Art.icon.dress}${esc(dressTheme(e))}</span><span class="chip">${Art.icon.pin}${esc(L(e.location) || L(site.content.venueName))}</span></div></div></button>`;
   }
 
   function renderMain() {
@@ -345,10 +348,10 @@
       <header><button class="iconbtn" data-close aria-label="${esc(t.back)}">${Art.icon.back}</button>${langToggle()}</header>
       <div class="center"><h2 class="script" style="font-size:${lang === 'hi' ? 32 : 40}px">${esc(L(e.title))}</h2>
       <p class="caps" style="margin:6px 0 0">${esc(fmtSpan(e, true))}<br>${esc(fmtWhen(e))}</p></div>
-      <div class="detail-hero">${Art.corner('tl sm')}${Art.corner('br sm', 1)}<img src="${LOGO}" alt="" style="width:110px;opacity:.9"></div>
+      ${e.imageUrl ? `<div class="detail-hero photo"><img src="${esc(media(e.imageUrl))}" alt="${esc(L(e.title))}"></div>` : `<div class="detail-hero">${Art.corner('tl sm')}${Art.corner('br sm', 1)}<img src="${LOGO}" alt="" style="width:110px;opacity:.9"></div>`}
       <p style="margin:0 0 6px">${esc(L(e.desc))}</p>
       <div class="infobox">${Art.icon.clock}<div><b>${esc(t.date)}</b>${esc(fmtSpan(e, true))}<br>${esc(fmtWhen(e))}${e.endDate ? `<br><span class="muted">${esc(t.comeAnyDays)}</span>` : ' IST'}</div></div>
-      <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${esc(L(e.dress) || t.toBeShared)}</div></div>
+      <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${dressLines(e).length ? dressLines(e).map((l, i) => i === 0 ? `<span class="dress-theme">${esc(l)}</span>` : `<span class="dress-line">${l.includes(':') ? `<em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}` : esc(l)}</span>`).join('') : esc(t.toBeShared)}</div></div>
       <div class="infobox">${Art.icon.pin}<div style="flex:1"><b>${esc(t.venueLabel)}</b>${e.endDate ? esc(L(e.location) || t.toBeShared) : esc(L(site.content.venueName)) + (L(e.location) ? ' — ' + esc(L(e.location)) : `<br><span class="muted">${esc(t.toBeShared)}</span>`)}
         ${e.mapsUrl || !e.endDate ? `<br><a class="linkbtn" style="padding:8px 0 0" href="${esc(e.mapsUrl || site.settings.mapsUrl)}" target="_blank" rel="noopener">${esc(t.directions)} ${Art.icon.arrow}</a>` : ''}</div></div>
       ${site.settings.open ? `<button class="btn block" style="margin-top:22px" data-act="rsvp2">${esc(t.rsvpCta)}</button>` : ''}

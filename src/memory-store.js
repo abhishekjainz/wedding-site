@@ -18,7 +18,7 @@ function createMemoryStore(persistKey) {
     async insertSubmission(s) { if (db.submissions.some(x => x.id === s.id)) throw new Error('exists'); db.submissions.push(clone(s)); save(); },
     async updateSubmission(s) { const i = db.submissions.findIndex(x => x.id === s.id); if (i < 0) throw new Error('missing'); db.submissions[i] = clone(s); save(); },
     async deleteSubmission(id) { db.submissions = db.submissions.filter(x => x.id !== id); save(); },
-    async getEvents() { return clone(db.events).sort((a, b) => a.sort - b.sort); },
+    async getEvents() { return Defaults.upgradeEvents(clone(db.events)).sort((a, b) => a.sort - b.sort); },
     async setEvents(e) { db.events = clone(e); const ids = new Set(Rules.eventOptions(e).map(x => x.id)); db.submissions.forEach(s => (s.events = s.events.filter(x => ids.has(x)))); save(); },
     async getContent() { return clone(db.content); },
     async setContent(c) { db.content = clone(c); save(); },

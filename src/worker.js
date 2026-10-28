@@ -56,7 +56,7 @@ function d1Store(db) {
     },
     async getEvents() {
       const rows = (await db.prepare('SELECT data FROM events ORDER BY sort').all()).results;
-      if (rows.length) return rows.map(r => JSON.parse(r.data));
+      if (rows.length) return Defaults.upgradeEvents(rows.map(r => JSON.parse(r.data)));
       await this.setEvents(Defaults.DEFAULT_EVENTS); // first run: seed the source-of-truth events
       return Defaults.DEFAULT_EVENTS;
     },

@@ -48,6 +48,31 @@ const DEFAULT_CONTENT = {
 // Source of truth for the itinerary AND RSVP eligibility.
 // groups: 1 = Friends, 2 = Close Family, 3 = Family & Guests, 4 = Other Guests.
 // An event with endDate spans several days: one card on the site, but guests pick the days they'll join.
+// Suggested wardrobe. First line = the theme (shown on the event card); the rest appears in the event details.
+const EVENT_DRESS = {
+  'home-days': { en: 'Easy & comfortable\nLadies: kurta sets | casual Indian or western\nGentlemen: kurta | smart casual\nComfortable shoes for exploring Indore',
+                 hi: 'आरामदायक और सहज\nमहिलाएँ: कुर्ता सेट | कैज़ुअल भारतीय या वेस्टर्न\nपुरुष: कुर्ता | स्मार्ट कैज़ुअल\nइंदौर घूमने के लिए आरामदायक जूते' },
+  mehendi: { en: 'Shades of green\nLadies: chaniya choli | saree\nGentlemen: kurta pyjama', hi: 'हरे रंग के शेड्स\nमहिलाएँ: चनिया चोली | साड़ी\nपुरुष: कुर्ता पायजामा' },
+  'bride-mayara': { en: 'Colourful Gujarati\nLadies: gharchola | bandhni | patola\nGentlemen: dhoti kurta', hi: 'रंग-बिरंगा गुजराती\nमहिलाएँ: घरचोला | बांधनी | पटोला\nपुरुष: धोती कुर्ता' },
+  haldi: { en: 'Yellow | orange\nLadies: easy Indian attire\nGentlemen: easy Indian attire\nWear something you don’t mind getting a little yellow!', hi: 'पीला | नारंगी\nमहिलाएँ: हल्के-फुल्के भारतीय परिधान\nपुरुष: हल्के-फुल्के भारतीय परिधान\nऐसे कपड़े पहनें जिन पर थोड़ी हल्दी लग जाए तो चिंता न हो!' },
+  'groom-mayara': { en: 'Colourful Gujarati\nLadies: gharchola | bandhni | patola\nGentlemen: dhoti kurta', hi: 'रंग-बिरंगा गुजराती\nमहिलाएँ: घरचोला | बांधनी | पटोला\nपुरुष: धोती कुर्ता' },
+  reception: { en: 'Indian formals\nLadies: saree | lehenga\nGentlemen: jodhpuri | tuxedo', hi: 'भारतीय फ़ॉर्मल\nमहिलाएँ: साड़ी | लहंगा\nपुरुष: जोधपुरी | टक्सीडो' },
+  baraat: { en: 'Pastels & safas\nLadies: lehenga | saree in pastel shades\nGentlemen: kurta | sherwani with a safa', hi: 'पेस्टल रंग और साफ़े\nमहिलाएँ: पेस्टल रंगों में लहंगा | साड़ी\nपुरुष: साफ़े के साथ कुर्ता | शेरवानी' },
+  phere: { en: 'Traditional finery: jewel tones\nLadies: saree | lehenga\nGentlemen: sherwani | bandhgala', hi: 'पारंपरिक शान: गहरे, रत्न जैसे रंग\nमहिलाएँ: साड़ी | लहंगा\nपुरुष: शेरवानी | बंदगला' },
+  'closing-dinner': { en: 'Glitz & glam\nLadies: indo-western\nGentlemen: indo-western', hi: 'चमक-दमक\nमहिलाएँ: इंडो-वेस्टर्न\nपुरुष: इंडो-वेस्टर्न' },
+};
+const EVENT_IMAGES = { 'home-days': '/assets/ev-home-days.jpg', mehendi: '/assets/ev-mehendi.jpg', reception: '/assets/ev-reception.jpg', phere: '/assets/ev-phere.jpg' };
+const EVENTS_VERSION = 2;
+// Events saved before version 2 get the suggested dress codes and photos (only where those are still empty).
+function upgradeEvents(list) {
+  return list.map(e => {
+    if ((e.v || 1) >= EVENTS_VERSION) return e;
+    const d = e.dress || {};
+    return { ...e, v: EVENTS_VERSION, dress: (d.en || d.hi) ? d : (EVENT_DRESS[e.id] || { en: '', hi: '' }), imageUrl: e.imageUrl || EVENT_IMAGES[e.id] || '' };
+  });
+}
+
+
 const DEFAULT_EVENTS = [
   { id: 'home-days', sort: 0, date: '2027-02-09', endDate: '2027-02-11', start: '12:00', end: '', groups: [1],
     timeNote: { en: 'Lunches, dinners & everything in between', hi: 'दोपहर-रात का खाना और ढेर सारी मस्ती' },
@@ -88,7 +113,8 @@ const DEFAULT_EVENTS = [
     title: { en: 'Closing Dinner', hi: 'समापन रात्रिभोज' },
     desc: { en: 'A relaxed final dinner together to round off the celebrations.',
             hi: 'उत्सव के समापन पर साथ मिलकर एक सुकून भरा रात्रिभोज।' } },
-].map(e => ({ endDate: '', timeNote: { en: '', hi: '' }, dress: { en: '', hi: '' }, location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', ...e }));
+].map(e => ({ endDate: '', timeNote: { en: '', hi: '' }, dress: EVENT_DRESS[e.id] || { en: '', hi: '' }, imageUrl: EVENT_IMAGES[e.id] || '', location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION, ...e }));
 
-const Defaults = { DEFAULT_SETTINGS, DEFAULT_CONTENT, DEFAULT_EVENTS };
+
+const Defaults = { DEFAULT_SETTINGS, DEFAULT_CONTENT, DEFAULT_EVENTS, upgradeEvents };
 export default Defaults; // @@strip-for-browser
