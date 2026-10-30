@@ -19,7 +19,7 @@ const ctx = (guest, ip = 'g') => ({ ip, sessions: { guest } });
 test('four access codes map to four groups with the right events; wrong code rejected', async () => {
   const { svc, g1, g2, g3, g4 } = await setup();
   const ids = async g => (await svc.site({}, ctx(g))).body.events.map(e => e.id);
-  assert.deepEqual(await ids(g1), ['home-days', 'mehendi', 'bride-mayara', 'haldi', 'groom-mayara', 'reception', 'baraat', 'phere', 'closing-dinner']);
+  assert.deepEqual(await ids(g1), ['home-days', 'mehendi', 'bride-mayara', 'haldi', 'groom-mayara', 'reception', 'afterparty', 'baraat', 'phere', 'closing-dinner']);
   assert.deepEqual(await ids(g2), ['mehendi', 'bride-mayara', 'haldi', 'groom-mayara', 'reception', 'baraat', 'phere', 'closing-dinner']);
   assert.deepEqual(await ids(g3), ['bride-mayara', 'haldi', 'groom-mayara', 'reception', 'baraat', 'phere', 'closing-dinner']);
   assert.deepEqual(await ids(g4), ['reception']);
@@ -222,4 +222,16 @@ test('drink & advice questions are kept for Friends only', async () => {
   assert.equal((await svc.site({}, ctx(g3))).body.settings.fun, false);
   const csv = (await svc.adminExport({ type: 'responses' }, { ip: 'x', sessions: { admin } })).csv;
   assert.ok(csv.includes('Marriage advice') && csv.includes('Never go to bed angry.'));
+});
+
+test('the Afterparty is Friends-only and can be picked in the RSVP', async () => {
+  const { svc, g1, g2, g3, g4 } = await setup();
+  const ids = async g => (await svc.site({}, ctx(g))).body.events.map(e => e.id);
+  assert.ok((await ids(g1)).includes('afterparty'));
+  for (const g of [g2, g3, g4]) assert.ok(!(await ids(g)).includes('afterparty'));
+  const r = await svc.submit(base({ events: ['reception', 'afterparty'] }), ctx(g1, 'p'));
+  assert.equal(r.status, 200); assert.deepEqual(r.body.submission.events.sort(), ['afterparty', 'reception']);
+  const order = await ids(g1); assert.equal(order.indexOf('afterparty'), order.indexOf('reception') + 1, 'listed right after the Reception');
+  const g3all = await svc.submit(base({ primaryName: 'Neha Shah', phoneNumber: '9811100000', partySize: 1, guests: ['Neha Shah'] }), ctx(g3, 'q'));
+  assert.ok(!g3all.body.submission.events.includes('afterparty'));
 });

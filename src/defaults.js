@@ -98,9 +98,21 @@ const HOME_DAYS_DESC = {
   en: 'Before the big crowds arrive, come early and settle in! These days are for getting to know each other’s friends, joining a few pre-wedding functions and celebrations, practising your performances for the wedding, picking up rental Indian outfits and, of course, exploring Indore (and its legendary street food). Come for one day or all three — the more, the merrier. We’ll help you book a hotel nearby for these nights, and the dates in your RSVP help us put everyone in the same hotel.',
   hi: 'शादी की भीड़ से पहले, जल्दी आइए और यहाँ रम जाइए! ये दिन एक-दूसरे के दोस्तों से घुलने-मिलने, शादी से पहले की कुछ रस्मों और जश्न में शामिल होने, शादी की परफ़ॉर्मेंस की तैयारी करने, किराये पर भारतीय परिधान लेने और हाँ, इंदौर (और यहाँ के मशहूर स्ट्रीट फ़ूड) की सैर के लिए हैं। एक दिन आइए या तीनों — जितने ज़्यादा, उतना मज़ा। इन रातों के लिए पास के होटल की बुकिंग में हम आपकी मदद करेंगे, और आपके आरएसवीपी की तारीख़ों से हम सबको एक ही होटल में ठहरा पाएँगे।',
 };
-const EVENTS_VERSION = 4;
+// Friends-only late-night party straight after the Reception. It technically starts at 1 AM on 14 Feb,
+// so `nightOf` keeps it under the 13 Feb tab and labels it "night of Sat 13 Feb".
+const AFTERPARTY = {
+  id: 'afterparty', sort: 5.5, date: '2027-02-14', nightOf: '2027-02-13', start: '01:00', end: '', groups: [1],
+  endNote: { en: 'till late', hi: 'देर रात तक' },
+  title: { en: 'The Afterparty', hi: 'आफ़्टर पार्टी' },
+  desc: { en: 'The Reception wraps up… and the real party begins! 🎧 A DJ spinning till late, arcade games to settle old rivalries once and for all, and free-flowing drinks all night (alcoholic and non-alcoholic). Bring your dancing shoes and your competitive streak. Sleep is optional; Baraat-day energy is not!',
+          hi: 'रिसेप्शन ख़त्म… और असली पार्टी शुरू! 🎧 देर रात तक DJ, पुरानी दुश्मनियाँ हमेशा के लिए निपटाने को आर्केड गेम्स, और पूरी रात फ़्री-फ़्लो ड्रिंक्स (अल्कोहलिक और नॉन-अल्कोहलिक)। अपने डांसिंग शूज़ और जीतने का जज़्बा साथ लाइए। नींद ज़रूरी नहीं — पर बारात वाले दिन की एनर्जी ज़रूरी है!' },
+};
+const EVENTS_VERSION = 5;
+const EVENT_BASE = { endDate: '', timeNote: { en: '', hi: '' }, endNote: { en: '', hi: '' }, dress: { en: '', hi: '' }, imageUrl: '', palette: [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION };
 // Events saved by an older version get the newer defaults, but only where nothing has been customised.
 function upgradeEvents(list) {
+  // v5 adds the Friends' Afterparty (once: after the dashboard saves the events, they are all v5 and it is never re-added)
+  if (list.some(e => (e.v || 1) < 5) && !list.some(e => e.id === 'afterparty')) list = [...list, { ...EVENT_BASE, ...AFTERPARTY }].sort((a, b) => a.sort - b.sort);
   return list.map(e => {
     const v = e.v || 1;
     if (v >= EVENTS_VERSION) return e;
@@ -168,7 +180,8 @@ const DEFAULT_EVENTS = [
     title: { en: 'Closing Dinner', hi: 'समापन रात्रिभोज' },
     desc: { en: 'A relaxed final dinner together to round off the celebrations.',
             hi: 'उत्सव के समापन पर साथ मिलकर एक सुकून भरा रात्रिभोज।' } },
-].map(e => ({ endDate: '', timeNote: { en: '', hi: '' }, dress: { en: '', hi: '' }, imageUrl: EVENT_IMAGES[e.id] || '', palette: [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION, ...e }));
+  AFTERPARTY,
+].map(e => ({ ...EVENT_BASE, imageUrl: EVENT_IMAGES[e.id] || '', ...e }));
 
 
 const Defaults = { DEFAULT_SETTINGS, DEFAULT_CONTENT, DEFAULT_EVENTS, upgradeEvents };

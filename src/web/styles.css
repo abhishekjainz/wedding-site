@@ -549,3 +549,5 @@ footer p { margin: 6px 0; }
 .stay-early { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); color: var(--ink-soft); }
 
 .sheet.still .panel, .sheet.still .scrim, .sheet.still .rv { animation: none !important; }
+/* event checkboxes sit inside a .field: keep them as rows (box beside the text), not stacked form labels */
+.field label.evitem { display: flex; font: inherit; letter-spacing: 0; color: var(--ink); margin: 0; }

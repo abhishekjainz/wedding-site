@@ -56,8 +56,10 @@
       : `${t.weekday[a.getUTCDay()]} ${a.getUTCDate()} – ${t.weekday[b.getUTCDay()]} ${b.getUTCDate()} ${t.monthShort[b.getUTCMonth()]}`;
   }
   const fmtWhen = e => (e.endDate && L(e.timeNote)) ? L(e.timeNote) : fmtRange(e);
-  const tabKey = e => e.endDate && e.endDate > e.date ? `${e.date}~${e.endDate}` : e.date;
-  const fmtRange = e => e.end ? `${fmtTime(e.start)} – ${fmtTime(e.end)}` : (lang === 'hi' ? `${fmtTime(e.start)} बजे से` : `${fmtTime(e.start)} ${T().onwards}`);
+  const tabKey = e => e.endDate && e.endDate > e.date ? `${e.date}~${e.endDate}` : (e.nightOf || e.date);
+  // Late-night events (e.g. the Afterparty at 1 AM) are labelled by the evening they belong to.
+  const evDay = (e, long) => e.nightOf ? T().nightOf(fmtDate(e.nightOf, long)) : fmtSpan(e, long);
+  const fmtRange = e => e.end ? `${fmtTime(e.start)} – ${fmtTime(e.end)}` : L(e.endNote) ? `${fmtTime(e.start)} – ${L(e.endNote)}` : (lang === 'hi' ? `${fmtTime(e.start)} बजे से` : `${fmtTime(e.start)} ${T().onwards}`);
   function datesLabel() {
     const ds = site.events.flatMap(e => Rules.eventDays(e)).sort();
     if (!ds.length) return L(site.content.dates);
@@ -206,7 +208,7 @@
     const time = fmtTime(e.start).split(' ');
     const timeHtml = lang === 'hi' ? `<b>${esc(time[1])}</b><small>${esc(time[0])}</small>` : `<b>${esc(time[0])}</b><small>${esc(time[1])}</small>`;
     return `<button class="ecard" data-event="${esc(e.id)}">
-      <div class="time">${timeHtml}<span class="until">${e.end ? '– ' + esc(fmtTime(e.end)) : esc(t.onwards)}</span></div>
+      <div class="time">${timeHtml}<span class="until">${e.end ? '– ' + esc(fmtTime(e.end)) : L(e.endNote) ? esc(L(e.endNote)) : esc(t.onwards)}</span></div>
       <div><h3>${esc(L(e.title))}</h3><p>${esc(L(e.desc))}</p>
       <div class="chips"><span class="chip">${Art.icon.dress}${esc(dressTheme(e))}</span><span class="chip">${Art.icon.pin}${esc(L(e.location) || L(site.content.venueName))}</span></div></div></button>`;
   }
@@ -368,10 +370,10 @@
     el.innerHTML = `<div class="scrim" data-close></div><div class="panel paper">
       <header><button class="iconbtn" data-close aria-label="${esc(t.back)}">${Art.icon.back}</button>${langToggle()}</header>
       <div class="center"><h2 class="script" style="font-size:${lang === 'hi' ? 32 : 40}px">${esc(L(e.title))}</h2>
-      <p class="caps" style="margin:6px 0 0">${esc(fmtSpan(e, true))}<br>${esc(fmtWhen(e))}</p></div>
+      <p class="caps" style="margin:6px 0 0">${esc(evDay(e, true))}<br>${esc(fmtWhen(e))}</p></div>
       ${e.imageUrl ? `<div class="detail-hero photo"><img src="${esc(media(e.imageUrl))}" alt="${esc(L(e.title))}"></div>` : `<div class="detail-hero">${Art.corner('tl sm')}${Art.corner('br sm', 1)}<img src="${LOGO}" alt="" style="width:110px;opacity:.9"></div>`}
       <p style="margin:0 0 6px">${esc(L(e.desc))}</p>
-      <div class="infobox">${Art.icon.clock}<div><b>${esc(t.date)}</b>${esc(fmtSpan(e, true))}<br>${esc(fmtWhen(e))}${e.endDate ? `<br><span class="muted">${esc(t.comeAnyDays)}</span>` : ' IST'}</div></div>
+      <div class="infobox">${Art.icon.clock}<div><b>${esc(t.date)}</b>${esc(evDay(e, true))}<br>${esc(fmtWhen(e))}${e.endDate ? `<br><span class="muted">${esc(t.comeAnyDays)}</span>` : ' IST'}</div></div>
       <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${dressLines(e).length ? dressLines(e).map((l, i) => i === 0 ? `<span class="dress-theme">${esc(l)}</span>` : `<span class="dress-line">${l.includes(':') ? `<em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}` : esc(l)}</span>`).join('') : esc(t.dressSoonLong)}${(e.palette || []).length ? `<div class="dress-visual">${Art.outfits(e.palette, e.id.replace(/[^a-z0-9]/gi, ''))}</div>` : ''}</div></div>
       <div class="infobox">${Art.icon.pin}<div style="flex:1"><b>${esc(t.venueLabel)}</b>${e.endDate ? esc(L(e.location) || t.toBeShared) : esc(L(site.content.venueName)) + (L(e.location) ? ' — ' + esc(L(e.location)) : `<br><span class="muted">${esc(t.toBeShared)}</span>`)}
         ${e.mapsUrl || !e.endDate ? `<br><a class="linkbtn" style="padding:8px 0 0" href="${esc(e.mapsUrl || site.settings.mapsUrl)}" target="_blank" rel="noopener">${esc(t.directions)} ${Art.icon.arrow}</a>` : ''}</div></div>
@@ -464,7 +466,7 @@
           <span class="pills">${days.map(d => { const id = `${e.id}@${d}`, on = f.events.includes(id); return `<button type="button" data-evday="${esc(id)}" aria-pressed="${on}">${on ? '✓ ' : ''}${esc(dayLabel(d))}</button>`; }).join('')}</span></span></div>`;
       }
       return `<label class="evitem"><input type="checkbox" data-ev="${esc(e.id)}" ${f.events.includes(e.id) ? 'checked' : ''}><span class="box">${Art.icon.check}</span>
-          <span><b>${esc(L(e.title))}</b><small>${esc(fmtDate(e.date))} · ${esc(fmtRange(e))}</small></span></label>`;
+          <span><b>${esc(L(e.title))}</b><small>${esc(evDay(e))} · ${esc(fmtRange(e))}</small></span></label>`;
     }).join('');
     return `<div class="${fieldCls('events')}" style="margin-top:30px"><p class="q" style="margin:0">${esc(t.whichEvents)}</p><p class="hint" style="margin:2px 0 10px">${esc(t.whichEventsSub)}</p>
         <div style="text-align:right"><button type="button" class="linkbtn" data-allevents>${esc(t.selectAll)}</button></div>
