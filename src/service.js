@@ -98,7 +98,7 @@ function createService(store, config) {
         full: Rules.isFullGroup(settings, group), fullGroups: Rules.isFullGroup(settings, group) ? [group] : [],
         countdownTo: settings.countdownTo || '2027-02-14T13:00:00+05:30',
         defaultLang: ((settings.defaultLang || {})[group]) === 'hi' ? 'hi' : 'en',
-        stayFrom: ((settings.stayFrom || {})[group]) || '', stayUntil: settings.stayUntil || '', checkoutTime: settings.checkoutTime || '12:00', checkinTime: settings.checkinTime || '14:00',
+        stayFrom: ((settings.stayFrom || {})[group]) || '', stayUntil: settings.stayUntil || '', checkoutTime: settings.checkoutTime || '12:00', checkinTime: ((settings.checkinTimes || {})[group]) || '14:00',
         fun: Rules.isFunGroup(settings, group), funGroups: Rules.isFunGroup(settings, group) ? [group] : [],
         guide: (settings.guideGroups || [1]).includes(Number(group)),
         guideContacts: (settings.guideGroups || [1]).includes(Number(group)) ? (settings.guideContacts || []).filter(c => c && c.name && c.phone) : [] },

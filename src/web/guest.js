@@ -32,10 +32,12 @@
   }
   // "Tue 9 – Thu 11 Feb" / "Tuesday 9 – Thursday 11 February 2027" for multi-day events
   // Hosted hotel stay for this guest's group (groups 1–3), e.g. "from Fri, 12 Feb until check-out at 12 noon on Mon, 15 Feb".
+  // "12 noon", "2 PM" (whole hours read more naturally in a sentence)
+  const niceTime = hm => hm === '12:00' ? (lang === 'hi' ? 'दोपहर 12 बजे' : '12 noon') : hm === '14:00' ? (lang === 'hi' ? 'दोपहर 2 बजे' : '2 PM') : fmtTime(hm);
   function stayText() {
     const s = site && site.settings; if (!s || !s.stayFrom || !s.stayUntil || s.simple) return '';
-    const time = s.checkoutTime === '12:00' ? (lang === 'hi' ? 'दोपहर 12 बजे' : '12 noon') : fmtTime(s.checkoutTime);
-    const ci = s.checkinTime === '14:00' ? (lang === 'hi' ? 'दोपहर 2 बजे' : '2 PM') : fmtTime(s.checkinTime || '14:00');
+    const time = niceTime(s.checkoutTime || '12:00');
+    const ci = niceTime(s.checkinTime || '14:00');
     return T().stayLine(fmtDate(s.stayFrom), fmtDate(s.stayUntil), time) + ' ' + T().checkinLine(fmtDate(s.stayFrom), ci);
   }
   // Friends' Home Days fall before the hosted stay: say we'll help them find a hotel nearby.
@@ -200,13 +202,13 @@
   // A day's cards: its events, plus small hotel check-in / check-out cards for this guest's group.
   function dayItems(d) {
     const s = site.settings, t = T();
-    const evs = site.events.filter(e => tabKey(e) === d).map(e => ({ html: eventCard(e), at: e.nightOf ? '99' : e.start }));
+    const evs = site.events.filter(e => tabKey(e) === d).map(e => ({ html: eventCard(e), at: e.nightOf ? '99' : e.start + '1' }));
     if (s.stayFrom && s.stayUntil && !s.simple) {
       const prev = (() => { const x = dObj(s.stayUntil); x.setUTCDate(x.getUTCDate() - 1); return x.toISOString().slice(0, 10); })();
       const ci = s.checkinTime || '14:00', co = s.checkoutTime || '12:00';
-      const noon = h => h === '12:00' ? (lang === 'hi' ? 'दोपहर 12 बजे' : '12 noon') : fmtTime(h);
-      if (d === s.stayFrom) evs.push({ at: ci, html: stayCard(ci, t.checkinTitle, t.checkinSub(fmtTime(ci))) });
-      if (d === prev) evs.push({ at: '98', html: stayCard(co, t.checkoutTitle, t.checkoutSub(fmtDate(s.stayUntil), noon(co)), fmtDate(s.stayUntil)) });
+      // check-in goes before any event starting at the same time (e.g. 12 noon check-in sits above the 1 PM Haldi)
+      if (d === s.stayFrom) evs.push({ at: ci + '0', html: stayCard(ci, t.checkinTitle, t.checkinSub(niceTime(ci))) });
+      if (d === prev) evs.push({ at: '98', html: stayCard(co, t.checkoutTitle, t.checkoutSub(fmtDate(s.stayUntil), niceTime(co)), fmtDate(s.stayUntil)) });
     }
     return evs.map((x, i) => ({ ...x, i })).sort((a, b) => a.at.localeCompare(b.at) || a.i - b.i).map(x => x.html).join('');
   }

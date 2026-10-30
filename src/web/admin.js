@@ -115,7 +115,7 @@
     const exRow = x => `<tr><td><a href="#" data-edit="${esc(x.id)}">${esc(x.name)}</a> <span class="muted">(${x.guests}, ${esc(gname(x.group))})</span></td><td>${[
       x.before.length ? `Arrives early: ${x.before.length} night(s) before the hosted stay (${x.before.map(fmtD).join(', ')})` : '',
       x.after.length ? `Stays on: ${x.after.length} night(s) after check-out (${x.after.map(fmtD).join(', ')})` : '',
-      x.earlyCheckin ? `Arrives ${fmtD(x.arrival)} before noon: before the ${esc(st.checkinTime || '14:00')} check-in` : '',
+      x.earlyCheckin ? `Arrives ${fmtD(x.arrival)} before noon: before the ${esc((st.checkinTimes || {})[x.group] || '14:00')} check-in` : '',
       x.lateCheckout ? `Leaves ${fmtD(x.departure)} ${esc(WIN[x.departureWindow] || '')}: after the ${esc(ct)} check-out` : ''].filter(Boolean).join('<br>')}</td></tr>`;
     return `<div class="callout"><b>Hosted stay:</b> Friends from ${fmtD(sf[1] || '')}, Close Family from ${fmtD(sf[2] || '')}, Family & Guests from ${fmtD(sf[3] || '')}, until check-out at ${esc(ct)} on ${fmtD(st.stayUntil || '')}. Each party is counted only for the nights it is actually in Indore inside that window: from its arrival date up to the night before its departure date, so someone flying out on 14 Feb isn't counted for the night of the 14th.</div>
       <div class="cardx"><h3>Rooms needed each night (hosted stay)</h3>${roomsTable}
@@ -197,7 +197,8 @@
       <div class="grid3" style="grid-template-columns:repeat(4,1fr)">${Rules.GROUP_IDS.map(g => `<div class="field"><label>${esc(Rules.GROUPS[g])}</label><select class="input" id="s-lang${g}">${['en', 'hi'].map(l => `<option value="${l}" ${((s.defaultLang || {})[g] || 'en') === l ? 'selected' : ''}>${l === 'hi' ? 'हिंदी (Hindi)' : 'English'}</option>`).join('')}</select></div>`).join('')}</div>
       <h3 style="margin-top:18px">Hosted stay</h3><p class="hint">Shown to guests on the RSVP travel step, and used to count rooms per night on the Accommodation tab.</p>
       <div class="grid3">${[1, 2, 3].map(g => `<div class="field"><label>${esc(Rules.GROUPS[g])}: stay from</label><input class="input" type="date" id="s-sf${g}" value="${esc((s.stayFrom || {})[g] || '')}"></div>`).join('')}</div>
-      <div class="grid3"><div class="field"><label>Check-in time (first day)</label><input class="input" type="time" id="s-ci" value="${esc(s.checkinTime || '14:00')}"></div><div class="field"><label>Check-out date</label><input class="input" type="date" id="s-su" value="${esc(s.stayUntil || '')}"></div><div class="field"><label>Check-out time</label><input class="input" type="time" id="s-ct" value="${esc(s.checkoutTime || '12:00')}"></div><div class="field"><label>Guests per room (estimate)</label><input class="input" type="number" min="1" max="6" id="s-occ" value="${esc(s.roomOccupancy || 2)}"></div></div>
+      <div class="grid3">${[1, 2, 3].map(g => `<div class="field"><label>${esc(Rules.GROUPS[g])}: check-in time</label><input class="input" type="time" id="s-ci${g}" value="${esc((s.checkinTimes || {})[g] || '14:00')}"></div>`).join('')}</div>
+      <div class="grid3"><div class="field"><label>Check-out date</label><input class="input" type="date" id="s-su" value="${esc(s.stayUntil || '')}"></div><div class="field"><label>Check-out time</label><input class="input" type="time" id="s-ct" value="${esc(s.checkoutTime || '12:00')}"></div><div class="field"><label>Guests per room (estimate)</label><input class="input" type="number" min="1" max="6" id="s-occ" value="${esc(s.roomOccupancy || 2)}"></div></div>
       <button class="btn" data-a="savesettings">Save settings</button></div>
       <div class="cardx"><h3>Exports & backups</h3><p class="hint">CSV files open in Excel / Google Sheets. Take a JSON backup weekly and before any big edit.</p>
         <div class="btnrow" style="flex-wrap:wrap;justify-content:flex-start"><button class="btn ghost" data-dl="responses">All responses CSV</button><button class="btn ghost" data-dl="guests">Guest list CSV</button><button class="btn ghost" data-dl="nights">Nights CSV</button><button class="btn ghost" data-a="backup">Full JSON backup</button></div></div>
@@ -241,7 +242,7 @@
         helpPhone: '+' + $('#s-phone').value.replace(/\D/g, ''), helpPhoneDisplay: $('#s-phoned').value.trim(), mapsUrl: $('#s-maps').value.trim(),
         guideContacts: [0, 1].map(i => ({ name: $('#s-gc' + i + 'n').value.trim(), phone: '+' + $('#s-gc' + i + 'p').value.replace(/\D/g, ''), display: $('#s-gc' + i + 'd').value.trim() })).filter(c => c.name && c.phone.length > 6),
         arrivalMin: $('#s-amin').value, arrivalMax: $('#s-amax').value, departureMax: $('#s-dmax').value,
-        stayFrom: Object.fromEntries([1, 2, 3].map(g => [g, $('#s-sf' + g).value]).filter(x => x[1])), stayUntil: $('#s-su').value, checkoutTime: $('#s-ct').value || '12:00', checkinTime: $('#s-ci').value || '14:00',
+        stayFrom: Object.fromEntries([1, 2, 3].map(g => [g, $('#s-sf' + g).value]).filter(x => x[1])), stayUntil: $('#s-su').value, checkoutTime: $('#s-ct').value || '12:00', checkinTimes: Object.fromEntries([1, 2, 3].map(g => [g, $('#s-ci' + g).value || '14:00'])),
         guideGroups: Rules.GROUP_IDS.filter(g => $('#s-guide' + g).checked),
         defaultLang: Object.fromEntries(Rules.GROUP_IDS.map(g => [g, $('#s-lang' + g).value])),
         roomOccupancy: Math.min(6, Math.max(1, parseInt($('#s-occ').value, 10) || 2)) };
