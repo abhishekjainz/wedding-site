@@ -14,7 +14,7 @@ const DEFAULT_SETTINGS = {
   simpleGroups: [4],
   // Hosted stay at the hotel: from this date per group, until check-out at checkoutTime on stayUntil.
   stayFrom: { 1: '2027-02-12', 2: '2027-02-12', 3: '2027-02-13' },
-  stayUntil: '2027-02-15', checkoutTime: '12:00',
+  stayUntil: '2027-02-15', checkoutTime: '12:00', checkinTime: '14:00',
   roomOccupancy: 2, // planning estimate: guests per room (each party rounds up to whole rooms)
   countdownTo: '2027-02-14T13:00:00+05:30', // the countdown on every link counts down to this moment
   defaultLang: { 1: 'en', 2: 'hi', 3: 'hi', 4: 'en' }, // language each link opens in (guests can still switch)

@@ -35,7 +35,8 @@
   function stayText() {
     const s = site && site.settings; if (!s || !s.stayFrom || !s.stayUntil || s.simple) return '';
     const time = s.checkoutTime === '12:00' ? (lang === 'hi' ? 'दोपहर 12 बजे' : '12 noon') : fmtTime(s.checkoutTime);
-    return T().stayLine(fmtDate(s.stayFrom), fmtDate(s.stayUntil), time);
+    const ci = s.checkinTime === '14:00' ? (lang === 'hi' ? 'दोपहर 2 बजे' : '2 PM') : fmtTime(s.checkinTime || '14:00');
+    return T().stayLine(fmtDate(s.stayFrom), fmtDate(s.stayUntil), time) + ' ' + T().checkinLine(fmtDate(s.stayFrom), ci);
   }
   // Friends' Home Days fall before the hosted stay: say we'll help them find a hotel nearby.
   function stayEarlyText() {

@@ -235,3 +235,11 @@ test('the Afterparty is Friends-only and can be picked in the RSVP', async () =>
   const g3all = await svc.submit(base({ primaryName: 'Neha Shah', phoneNumber: '9811100000', partySize: 1, guests: ['Neha Shah'] }), ctx(g3, 'q'));
   assert.ok(!g3all.body.submission.events.includes('afterparty'));
 });
+
+test('morning arrivals on the first hosted day are flagged for early check-in', async () => {
+  const { svc, g2, admin } = await setup();
+  await svc.submit(base({ arrivalDate: '2027-02-12', arrivalWindow: 'am', departureDate: '2027-02-15', departureWindow: 'am' }), ctx(g2, 'c'));
+  const d = (await svc.adminData({}, { ip: 'x', sessions: { admin } })).body.summary;
+  assert.ok(d.stayExceptions[0].earlyCheckin);
+  assert.equal((await svc.site({}, ctx(g2))).body.settings.checkinTime, '14:00');
+});

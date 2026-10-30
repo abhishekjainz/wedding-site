@@ -186,10 +186,11 @@ function findDuplicate(submissions, v, excludeId) {
 const addDay = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 function stayFor(s, settings) {
   const from = ((settings && settings.stayFrom) || {})[s.group], until = settings && settings.stayUntil;
-  const out = { hosted: [], before: [], after: [], lateCheckout: false, hostedGroup: !!(from && until) };
+  const out = { hosted: [], before: [], after: [], lateCheckout: false, earlyCheckin: false, hostedGroup: !!(from && until) };
   if (s.status !== 'accept' || !isDate(s.arrivalDate) || !isDate(s.departureDate) || !out.hostedGroup) return out;
   for (let d = s.arrivalDate; d < s.departureDate; d = addDay(d, 1)) (d < from ? out.before : d >= until ? out.after : out.hosted).push(d);
   out.lateCheckout = s.departureDate === until && !!s.departureWindow && s.departureWindow !== 'am';
+  out.earlyCheckin = s.arrivalDate === from && s.arrivalWindow === 'am'; // lands before the 2 PM check-in on the first day
   return out;
 }
 const roomsFor = (s, settings) => Math.max(1, Math.ceil((s.guests || []).length / ((settings && settings.roomOccupancy) || 2)));
@@ -233,8 +234,8 @@ function summarize(submissions, events, settings) {
     nights: guestNights(submissions),
     roomNights: roomNights(submissions, settings),
     stayExceptions: submissions.filter(s => s.status === 'accept').map(s => ({ s, st: stayFor(s, settings) }))
-      .filter(x => x.st.before.length || x.st.after.length || x.st.lateCheckout)
-      .map(({ s, st }) => ({ id: s.id, name: s.primaryName, group: s.group, guests: s.guests.length, before: st.before, after: st.after, lateCheckout: st.lateCheckout,
+      .filter(x => x.st.before.length || x.st.after.length || x.st.lateCheckout || x.st.earlyCheckin)
+      .map(({ s, st }) => ({ id: s.id, name: s.primaryName, group: s.group, guests: s.guests.length, before: st.before, after: st.after, lateCheckout: st.lateCheckout, earlyCheckin: st.earlyCheckin, arrival: s.arrivalDate,
         departure: s.departureDate, departureWindow: s.departureWindow })),
     duplicates: duplicateFlags(submissions),
   };
