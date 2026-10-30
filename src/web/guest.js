@@ -122,7 +122,7 @@
   }
   async function tryAccess(code) {
     const r = await call('POST', '/api/access', { code });
-    if (r.status === 200) return boot();
+    if (r.status === 200) { ls.set('wd_code', String(code).trim()); return boot(); }
     renderGate(r.status === 429 ? T().rateLimited : r.status === 0 ? T().network : T().badCode);
   }
 
@@ -351,7 +351,7 @@
       if (act === 'myrsvp') { e.preventDefault(); loadEdit(ls.get('wd_edit')); }
       if (act === 'replay') showIntro();
       if (act === 'guide') { e.preventDefault(); $('#drawer') && $('#drawer').classList.remove('open'); renderGuide(); }
-      if (act === 'logout') { e.preventDefault(); window.PREVIEW.logout(); ls.del('wd_seen_intro'); boot(); }
+      if (act === 'logout') { e.preventDefault(); window.PREVIEW.logout(); ls.del('wd_seen_intro'); ls.del('wd_code'); boot(); }
     };
     const bar = $('#top');
     window.onscroll = () => bar && bar.classList.toggle('scrolled', scrollY > 120);
@@ -734,9 +734,15 @@
       const code = params.get('invite');
       try { history.replaceState(null, '', location.pathname); } catch {}
       const a = await call('POST', '/api/access', { code });
-      if (a.status !== 200) return renderGate(T().badCode);
+      if (a.status !== 200) return renderGate(a.status === 429 ? T().rateLimited : a.status === 0 ? T().network : T().badCode);
+      ls.set('wd_code', code.trim()); // lets this phone get back in even if the browser later drops the cookie
     }
-    const r = await call('GET', '/api/site');
+    let r = await call('GET', '/api/site');
+    if (r.status === 401 && ls.get('wd_code')) { // cookie lost or expired: sign in again quietly with the remembered code
+      const a = await call('POST', '/api/access', { code: ls.get('wd_code') });
+      if (a.status === 200) r = await call('GET', '/api/site');
+      else if (a.status === 403) ls.del('wd_code'); // codes were changed: ask for the new one
+    }
     if (r.status === 401) return renderGate(params.get('invalid') ? T().badCode : '');
     if (r.status !== 200) return renderGate(T().network);
     site = r.body;

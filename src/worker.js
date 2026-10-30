@@ -109,6 +109,8 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const p = url.pathname;
+    // Always HTTPS: the sign-in cookie is Secure, so a plain-http visit could never keep it.
+    if (url.protocol === 'http:' && !/^(localhost|127\.0\.0\.1)$/.test(url.hostname)) { url.protocol = 'https:'; return Response.redirect(url.toString(), 301); }
     if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32) return new Response('Server not configured: set SESSION_SECRET', { status: 500 });
     const svc = createService(d1Store(env.DB), {
       sessionSecret: env.SESSION_SECRET,
@@ -120,11 +122,12 @@ export default {
 
     // Short, forwardable invitation links: https://<site>/i/<CODE>, or /i/<CODE>/hi or /i/<CODE>/en to choose the language
     if (p.startsWith('/i/')) {
+      // The page itself signs in with the code (and remembers it on the phone), so the link keeps working even if a
+      // browser drops the cookie — e.g. WhatsApp's in-app browser, private tabs, or opening the link on another app.
       const [code, lng] = p.slice(3).split('/');
-      const r = await svc.access({ code: decodeURIComponent(code || '') }, ctx);
-      if (r.status !== 200) return Response.redirect(url.origin + '/?invalid=1', 302);
-      const to = lng === 'hi' || lng === 'en' ? '/?lang=' + lng : '/';
-      return new Response(null, { status: 302, headers: { Location: to, 'Set-Cookie': setCookie(r.setSession), ...SEC_HEADERS } });
+      const q = new URLSearchParams({ invite: decodeURIComponent(code || '') });
+      if (lng === 'hi' || lng === 'en') q.set('lang', lng);
+      return new Response(null, { status: 302, headers: { Location: '/?' + q, 'Cache-Control': 'no-store', ...SEC_HEADERS } });
     }
     if (p.startsWith('/media/')) {
       if (!(await svc.site({}, ctx)).body.group && !(await svc.adminData({}, ctx)).body.submissions) return new Response('Not found', { status: 404 });
