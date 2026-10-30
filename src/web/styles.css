@@ -551,3 +551,14 @@ footer p { margin: 6px 0; }
 .sheet.still .panel, .sheet.still .scrim, .sheet.still .rv { animation: none !important; }
 /* event checkboxes sit inside a .field: keep them as rows (box beside the text), not stacked form labels */
 .field label.evitem { display: flex; font: inherit; letter-spacing: 0; color: var(--ink); margin: 0; }
+
+/* small hotel check-in / check-out cards in the celebrations list */
+.stay-card { display: grid; grid-template-columns: 86px 1fr; gap: 14px; padding: 12px 16px; border-radius: var(--r); border: 1px dashed #d9c3a9; background: rgba(255, 252, 247, .55); text-align: left; }
+.stay-card .time { text-align: center; border-right: 1px solid var(--line); padding-right: 12px; align-self: center; }
+.stay-card .time b { display: block; font: 500 22px/1.1 var(--serif); color: var(--ink-soft); }
+.stay-card .time small { display: block; font: 600 11px var(--caps); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+.stay-card .time .until { display: block; margin-top: 4px; font: 12px var(--caps); color: var(--ink-faint); }
+.stay-card h3 { margin: 0; display: flex; align-items: center; gap: 8px; font: 500 18px/1.25 var(--serif); color: var(--ink-soft); }
+.stay-card h3 svg { width: 20px; height: 20px; color: #b98a5a; flex: none; }
+.stay-card p { margin: 3px 0 0; font-size: 15px; color: var(--ink-soft); }
+.lang-hi .stay-card .time small { letter-spacing: 0; }

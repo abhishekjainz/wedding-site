@@ -197,6 +197,25 @@
   }
   const dressLines = e => (L(e.dress) || '').split('\n').map(x => x.trim()).filter(Boolean);
   const dressTheme = e => dressLines(e)[0] || T().dressSoon;
+  // A day's cards: its events, plus small hotel check-in / check-out cards for this guest's group.
+  function dayItems(d) {
+    const s = site.settings, t = T();
+    const evs = site.events.filter(e => tabKey(e) === d).map(e => ({ html: eventCard(e), at: e.nightOf ? '99' : e.start }));
+    if (s.stayFrom && s.stayUntil && !s.simple) {
+      const prev = (() => { const x = dObj(s.stayUntil); x.setUTCDate(x.getUTCDate() - 1); return x.toISOString().slice(0, 10); })();
+      const ci = s.checkinTime || '14:00', co = s.checkoutTime || '12:00';
+      const noon = h => h === '12:00' ? (lang === 'hi' ? 'दोपहर 12 बजे' : '12 noon') : fmtTime(h);
+      if (d === s.stayFrom) evs.push({ at: ci, html: stayCard(ci, t.checkinTitle, t.checkinSub(fmtTime(ci))) });
+      if (d === prev) evs.push({ at: '98', html: stayCard(co, t.checkoutTitle, t.checkoutSub(fmtDate(s.stayUntil), noon(co)), fmtDate(s.stayUntil)) });
+    }
+    return evs.map((x, i) => ({ ...x, i })).sort((a, b) => a.at.localeCompare(b.at) || a.i - b.i).map(x => x.html).join('');
+  }
+  function stayCard(hm, title, sub, dayNote) {
+    const time = fmtTime(hm).split(' ');
+    const timeHtml = lang === 'hi' ? `<b>${esc(time[1])}</b><small>${esc(time[0])}</small>` : `<b>${esc(time[0])}</b><small>${esc(time[1])}</small>`;
+    return `<div class="stay-card"><div class="time">${timeHtml}${dayNote ? `<span class="until">${esc(dayNote)}</span>` : ''}</div>
+      <div><h3>${Art.icon.bed}${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
+  }
   function eventCard(e) {
     const t = T();
     if (e.endDate && e.endDate > e.date) {
@@ -265,7 +284,7 @@
           const top = b ? `${a.getUTCDate()}–${b.getUTCDate()} ${t.monthShort[b.getUTCMonth()]}` : `${a.getUTCDate()} ${t.monthShort[a.getUTCMonth()]}`;
           const sub = b ? `${t.weekday[a.getUTCDay()]} – ${t.weekday[b.getUTCDay()]}` : t[days.length > 3 ? 'weekday' : 'weekdayLong'][a.getUTCDay()];
           return `<button role="tab" aria-selected="${d === day}" data-day="${d}"><b>${esc(top).toUpperCase()}</b><small>${esc(sub)}</small></button>`; }).join('')}</div>
-        <div class="events" role="tabpanel">${site.events.filter(e => tabKey(e) === day).map(eventCard).join('')}</div>
+        <div class="events" role="tabpanel">${dayItems(day)}</div>
         <p class="ist">${esc(t.allTimesIst)}</p>
       </section>
 
