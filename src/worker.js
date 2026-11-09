@@ -105,6 +105,29 @@ function cookies(req) {
 const COOKIE = { guest: { name: 'wg_guest', path: '/', same: 'Lax' }, admin: { name: 'wg_admin', path: '/api/admin', same: 'Strict' } };
 const setCookie = s => { const c = COOKIE[s.name]; return `${c.name}=${encodeURIComponent(s.value)}; Path=${c.path}; Max-Age=${Math.floor(s.maxAge)}; HttpOnly; Secure; SameSite=${c.same}`; };
 
+const PREVIEW_BOTS = /WhatsApp|facebookexternalhit|Facebot|TelegramBot|Twitterbot|Slackbot|LinkedInBot|Discordbot|SkypeUriPreview|Applebot|redditbot|Pinterest|Embedly|Iframely|vkShare|Googlebot|bingbot|Snapchat|Viber|Line\//i;
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function dateSpan(a, b) {
+  if (!a) return 'February 2027';
+  const [ya, ma, da] = a.split('-').map(Number), [yb, mb, db] = (b || a).split('-').map(Number);
+  if (a === b || !b) return `${da} ${MONTHS[ma - 1]} ${ya}`;
+  return ma === mb && ya === yb ? `${da}–${db} ${MONTHS[ma - 1]} ${ya}` : `${da} ${MONTHS[ma - 1]} – ${db} ${MONTHS[mb - 1]} ${yb}`;
+}
+function previewPage(info, url, to, lng) {
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const lang = lng === 'hi' || lng === 'en' ? lng : info ? info.lang : 'en';
+  const title = info ? `Dreamy & Abhishek · ${dateSpan(info.from, info.to)}` : 'Dreamy & Abhishek · You’re invited';
+  const desc = lang === 'hi' ? 'आप हमारे विवाह में सादर आमंत्रित हैं · इंदौर। निमंत्रण खोलने और RSVP के लिए टैप करें।' : 'You’re invited to our wedding in Indore. Tap to open your invitation and RSVP.';
+  const img = url.origin + '/assets/og-image.jpg';
+  const html = `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${esc(title)}</title>
+<meta name="robots" content="noindex, nofollow"><meta property="og:type" content="website"><meta property="og:site_name" content="Dreamy & Abhishek">
+<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta name="description" content="${esc(desc)}">
+<meta property="og:image" content="${img}"><meta property="og:image:secure_url" content="${img}"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:image" content="${img}">
+<meta http-equiv="refresh" content="0;url=${esc(to)}"></head><body><a href="${esc(to)}">${esc(title)}</a></body></html>`;
+  return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' } });
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -127,6 +150,8 @@ export default {
       const [code, lng] = p.slice(3).split('/');
       const q = new URLSearchParams({ invite: decodeURIComponent(code || '') });
       if (lng === 'hi' || lng === 'en') q.set('lang', lng);
+      // Link-preview robots (WhatsApp, iMessage, Telegram…) get a tiny page whose title shows this group's own dates.
+      if (PREVIEW_BOTS.test(req.headers.get('user-agent') || '')) return previewPage(await svc.previewFor(decodeURIComponent(code || '')), url, '/?' + q, lng);
       return new Response(null, { status: 302, headers: { Location: '/?' + q, 'Cache-Control': 'no-store', ...SEC_HEADERS } });
     }
     if (p.startsWith('/media/')) {

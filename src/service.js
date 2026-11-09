@@ -109,6 +109,18 @@ function createService(store, config) {
     hashPassword,
 
     // Exchange an invitation code for a signed group session.
+    // For link previews (WhatsApp etc.): which group a code belongs to and the dates that group is invited for.
+    // No session is created; returns null for an unknown code.
+    async previewFor(code) {
+      const c = String(code || '').trim().toUpperCase();
+      let group = null;
+      for (const g of Rules.GROUP_IDS) if (config.inviteCodes[g] && String(config.inviteCodes[g]).trim().toUpperCase() === c) group = g;
+      if (!group) return null;
+      const [events, settings] = await Promise.all([store.getEvents(), store.getSettings()]);
+      const days = events.filter(e => (e.groups || []).includes(group)).flatMap(e => Rules.eventDays(e).map(d => e.nightOf && d === e.date ? e.nightOf : d)).sort();
+      return { group, from: days[0] || '', to: days[days.length - 1] || '', lang: ((settings.defaultLang || {})[group]) === 'hi' ? 'hi' : 'en' };
+    },
+
     async access({ code }, ctx) {
       // Limits are per IP address. Indian mobile networks share one address across many phones,
       // so guest limits are generous; invitation codes are random enough that guessing is not a risk.

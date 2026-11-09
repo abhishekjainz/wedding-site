@@ -18,15 +18,16 @@ const head = (title, css, extra = '', fontFace = hindiFace('/assets/hindi.woff2'
 <meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#fbf6ef"><meta name="color-scheme" content="light">
 <title>${title}</title>
-<meta property="og:title" content="Dreamy & Abhishek · 12–14 February 2027">
-<meta property="og:description" content="You’re invited — a private wedding invitation.">
+<meta property="og:title" content="Dreamy & Abhishek · You’re invited">
+<meta property="og:description" content="A private wedding invitation · Indore, February 2027">
+<meta property="og:image" content="/assets/og-image.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}">
 ${extra}<style>${fontFace}${css}</style></head>`;
 
 // ---- production site ----
 mkdirSync(new URL('../public/assets', import.meta.url), { recursive: true });
-const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-haldi.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-baraat.jpg', 'ev-phere.jpg', 'hindi.woff2', 'hindi-italic.woff2'];
+const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-haldi.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-baraat.jpg', 'ev-phere.jpg', 'hindi.woff2', 'hindi-italic.woff2', 'og-image.jpg'];
 for (const f of ASSET_FILES) copyFileSync(new URL('../assets/' + f, import.meta.url), new URL('../public/assets/' + f, import.meta.url));
 W('public/app.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('guide.js'), web('guest.js'), 'GuestApp.boot();'].join('\n;\n'));
 W('public/admin.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('admin.js'), 'AdminApp.boot();'].join('\n;\n'));
