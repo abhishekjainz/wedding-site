@@ -239,6 +239,7 @@
     view = 'main';
     try { if (location.hash === '#travel-guide') history.replaceState(null, '', location.pathname + location.search); } catch {}
     const t = T(), c = site.content, s = site.settings;
+    try { document.title = L(c.coupleShort); } catch {}
     const days = [...new Set(site.events.map(tabKey))].sort();
     if (!day || !days.includes(day)) day = days[0];
     const photos = c.photos || [];
@@ -315,7 +316,7 @@
         <img class="agency" src="${AGENCY}" alt="Phoenix Event Media Group" loading="lazy">
         <p class="muted" style="max-width:340px;margin:6px auto 0;font-size:16px">${esc(t.helpBody)}</p>
         <a class="help-phone" href="tel:${esc(s.helpPhone)}">${Art.icon.phone} ${esc(s.helpPhoneDisplay)}</a>
-        <div class="helpbtns"><a class="btn" href="${esc(waLink(s.helpPhone, t.waHello))}" target="_blank" rel="noopener">${Art.icon.whatsapp} WhatsApp</a>
+        <div class="helpbtns"><a class="btn" href="${esc(waLink(s.helpPhone, t.waHello(L(c.coupleShort))))}" target="_blank" rel="noopener">${Art.icon.whatsapp} WhatsApp</a>
           <a class="btn ghost" href="tel:${esc(s.helpPhone)}">${Art.icon.phone} ${esc(t.call)}</a></div>
       </section>
       </main>
@@ -324,7 +325,7 @@
         <p class="names" style="font-size:32px">${esc(L(c.coupleShort))}</p>
         <p class="caps">${esc(datesLabel())} · ${lang === 'hi' ? 'इंदौर' : 'Indore'}</p>
         <button class="linkbtn" data-act="replay">${Art.icon.replay} ${esc(t.replay)}</button>
-        <p class="muted" style="font-size:14px">${esc(t.footer)}</p>
+        <p class="muted" style="font-size:14px">${esc(t.footer(L(c.coupleShort)))}</p>
       </footer>`;
     wireMain();
     revealOnScroll();
@@ -702,7 +703,7 @@
       <p class="q" style="margin-top:24px">${esc(t.editLinkTitle)}</p>
       <p class="muted" style="font-size:15px;margin-top:-6px">${esc(t.editLinkBody)}</p>
       <div class="editlink"><span id="elink">${esc(editUrl(rsvp.token))}</span><button class="btn ghost" style="min-height:40px;padding:0 14px" data-done="copy">${Art.icon.copy} ${esc(t.copy)}</button></div>
-      <a class="btn ghost block" style="margin-top:10px" target="_blank" rel="noopener" href="${esc(waLink(s.phone, `${t.editLinkTitle} — Dreamy & Abhishek: ${editUrl(rsvp.token)}`))}">${Art.icon.whatsapp} ${esc(t.saveToWhatsapp)}</a>
+      <a class="btn ghost block" style="margin-top:10px" target="_blank" rel="noopener" href="${esc(waLink(s.phone, `${t.editLinkTitle} — ${L(site.content.coupleShort)}: ${editUrl(rsvp.token)}`))}">${Art.icon.whatsapp} ${esc(t.saveToWhatsapp)}</a>
       <button class="btn block" style="margin-top:16px" data-done="close">${esc(t.done)}</button></div>`;
   }
   function wireDone(el) {

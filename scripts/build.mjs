@@ -27,7 +27,7 @@ ${extra}<style>${fontFace}${css}</style></head>`;
 
 // ---- production site ----
 mkdirSync(new URL('../public/assets', import.meta.url), { recursive: true });
-const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-haldi.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-baraat.jpg', 'ev-phere.jpg', 'hindi.woff2', 'hindi-italic.woff2', 'og-image.jpg'];
+const ASSET_FILES = ['mono.webp', 'seal.webp', 'paper.jpg', 'agency.webp', 'venue-photo.jpg', 'ev-haldi.jpg', 'ev-mehendi.jpg', 'ev-reception.jpg', 'ev-baraat.jpg', 'ev-phere.jpg', 'hindi.woff2', 'hindi-italic.woff2', 'og-image.jpg', 'og-image-ad.jpg'];
 for (const f of ASSET_FILES) copyFileSync(new URL('../assets/' + f, import.meta.url), new URL('../public/assets/' + f, import.meta.url));
 W('public/app.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('guide.js'), web('guest.js'), 'GuestApp.boot();'].join('\n;\n'));
 W('public/admin.js', [web('art.js'), web('i18n.js'), rulesBrowser, web('api.js'), web('admin.js'), 'AdminApp.boot();'].join('\n;\n'));

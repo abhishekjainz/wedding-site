@@ -1,6 +1,7 @@
 // Storage-agnostic backend logic. The Cloudflare Worker runs this against D1;
 // the browser preview runs the very same code against an in-memory store.
 import Rules from './rules.js'; // @@strip-for-browser
+import Defaults from './defaults.js'; // @@strip-for-browser
 
 const enc = new TextEncoder();
 const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -83,12 +84,19 @@ function createService(store, config) {
     const fam = (photosFamily || []).filter(p => p && p.url);
     return Number(group) === 1 || !fam.length ? rest : { ...rest, photos: photosFamily };
   }
+  const groomFirst = (settings, group) => (settings.groomFirstGroups || []).includes(Number(group));
+  // Name order per link: some groups see "Abhishek & Dreamy".
+  function namesFor(content, settings, group) {
+    if (!groomFirst(settings, group)) return content;
+    const d = Defaults.DEFAULT_CONTENT.coupleShortGroomFirst;
+    return { ...content, coupleShort: content.coupleShortGroomFirst && content.coupleShortGroomFirst.en ? content.coupleShortGroomFirst : d };
+  }
 
   async function siteFor(group) {
     const [content, events, settings] = await Promise.all([store.getContent(), store.getEvents(), store.getSettings()]);
     return {
       group,
-      content: storyFor(content, group),
+      content: namesFor(storyFor(content, group), settings, group),
       events: Rules.eligibleEvents(events, group),
       settings: { deadline: settings.deadline, open: Rules.isOpen(settings), helpPhone: settings.helpPhone,
         helpPhoneDisplay: settings.helpPhoneDisplay, mapsUrl: settings.mapsUrl, maxParty: settings.maxParty,
@@ -118,7 +126,7 @@ function createService(store, config) {
       if (!group) return null;
       const [events, settings] = await Promise.all([store.getEvents(), store.getSettings()]);
       const days = events.filter(e => (e.groups || []).includes(group)).flatMap(e => Rules.eventDays(e).map(d => e.nightOf && d === e.date ? e.nightOf : d)).sort();
-      return { group, from: days[0] || '', to: days[days.length - 1] || '', lang: ((settings.defaultLang || {})[group]) === 'hi' ? 'hi' : 'en' };
+      return { group, groomFirst: groomFirst(settings, group), from: days[0] || '', to: days[days.length - 1] || '', lang: ((settings.defaultLang || {})[group]) === 'hi' ? 'hi' : 'en' };
     },
 
     async access({ code }, ctx) {

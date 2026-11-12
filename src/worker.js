@@ -116,11 +116,12 @@ function dateSpan(a, b) {
 function previewPage(info, url, to, lng) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const lang = lng === 'hi' || lng === 'en' ? lng : info ? info.lang : 'en';
-  const title = info ? `Dreamy & Abhishek · ${dateSpan(info.from, info.to)}` : 'Dreamy & Abhishek · You’re invited';
+  const names = info && info.groomFirst ? 'Abhishek & Dreamy' : 'Dreamy & Abhishek';
+  const title = info ? `${names} · ${dateSpan(info.from, info.to)}` : 'Dreamy & Abhishek · You’re invited';
   const desc = lang === 'hi' ? 'आप हमारे विवाह में सादर आमंत्रित हैं · इंदौर। निमंत्रण खोलने और RSVP के लिए टैप करें।' : 'You’re invited to our wedding in Indore. Tap to open your invitation and RSVP.';
-  const img = url.origin + '/assets/og-image.jpg';
+  const img = url.origin + (info && info.groomFirst ? '/assets/og-image-ad.jpg' : '/assets/og-image.jpg');
   const html = `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${esc(title)}</title>
-<meta name="robots" content="noindex, nofollow"><meta property="og:type" content="website"><meta property="og:site_name" content="Dreamy & Abhishek">
+<meta name="robots" content="noindex, nofollow"><meta property="og:type" content="website"><meta property="og:site_name" content="${esc(names)}">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta name="description" content="${esc(desc)}">
 <meta property="og:image" content="${img}"><meta property="og:image:secure_url" content="${img}"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:image" content="${img}">

@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS = {
   roomOccupancy: 2, // planning estimate: guests per room (each party rounds up to whole rooms)
   countdownTo: '2027-02-14T13:00:00+05:30', // the countdown on every link counts down to this moment
   defaultLang: { 1: 'en', 2: 'hi', 3: 'hi', 4: 'en' }, // language each link opens in (guests can still switch)
+  groomFirstGroups: [2, 3], // links that show “Abhishek & Dreamy” instead of “Dreamy & Abhishek”
   guideGroups: [1], // groups that see the travel guide for international guests
   funGroups: [1], // groups asked the drink & marriage-advice questions
   fullGroups: [2, 3], // RSVP 'yes' = every event the group is invited to; no event picker, no song request
@@ -31,6 +32,7 @@ const DEFAULT_SETTINGS = {
 
 const DEFAULT_CONTENT = {
   coupleShort: { en: 'Dreamy & Abhishek', hi: 'ड्रीमी और अभिषेक' },
+  coupleShortGroomFirst: { en: 'Abhishek & Dreamy', hi: 'अभिषेक और ड्रीमी' }, // used on the groomFirstGroups links
   dates: { en: '12 – 14 February 2027', hi: '12 – 14 फ़रवरी 2027' }, // fallback only; shown dates come from each group's events
   venueName: { en: 'Essentia Luxury Hotel', hi: 'एसेंशिया लग्ज़री होटल' },
   venueCity: { en: 'Indore, Madhya Pradesh, India', hi: 'इंदौर, मध्य प्रदेश, भारत' },

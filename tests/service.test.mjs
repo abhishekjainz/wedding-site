@@ -249,3 +249,10 @@ test('Family & Guests check in at 12 noon, Friends and Close Family at 2 PM', as
   const ci = async g => (await svc.site({}, ctx(g))).body.settings.checkinTime;
   assert.deepEqual([await ci(g1), await ci(g2), await ci(g3)], ['14:00', '14:00', '12:00']);
 });
+
+test('Close Family and Family & Guests see “Abhishek & Dreamy”', async () => {
+  const { svc, g1, g2, g3, g4 } = await setup();
+  const n = async g => (await svc.site({}, ctx(g))).body.content.coupleShort;
+  assert.equal((await n(g1)).en, 'Dreamy & Abhishek'); assert.equal((await n(g4)).en, 'Dreamy & Abhishek');
+  assert.equal((await n(g2)).en, 'Abhishek & Dreamy'); assert.equal((await n(g3)).hi, 'अभिषेक और ड्रीमी');
+});
