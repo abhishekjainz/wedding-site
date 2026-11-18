@@ -110,12 +110,65 @@ const AFTERPARTY = {
   desc: { en: 'The Reception wraps up… and the real party begins! 🎧 A DJ spinning till late, arcade games to settle old rivalries once and for all, and free-flowing drinks all night (alcoholic and non-alcoholic). Bring your dancing shoes and your competitive streak. Sleep is optional; Baraat-day energy is not!',
           hi: 'रिसेप्शन ख़त्म… और असली पार्टी शुरू! 🎧 देर रात तक DJ, पुरानी दुश्मनियाँ हमेशा के लिए निपटाने को आर्केड गेम्स, और पूरी रात फ़्री-फ़्लो ड्रिंक्स (अल्कोहलिक और नॉन-अल्कोहलिक)। अपने डांसिंग शूज़ और जीतने का जज़्बा साथ लाइए। नींद ज़रूरी नहीं — पर बारात वाले दिन की एनर्जी ज़रूरी है!' },
 };
-const EVENTS_VERSION = 5;
-const EVENT_BASE = { endDate: '', timeNote: { en: '', hi: '' }, endNote: { en: '', hi: '' }, dress: { en: '', hi: '' }, imageUrl: '', palette: [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION };
+// Wardrobe planner (Abhishek & Dreamy's planner, illustrated by rās collective): one look per event.
+// dress: first line = the dress code shown on the event card, then Women / Men lines.
+const WARDROBE = (() => {
+  const look = (name, note, setting, dress, image) => ({ dressName: { en: name, hi: name }, dressNote: note, dressSetting: setting, dress, outfitImage: image });
+  const mayra = look('The Mama-Mia Affair',
+    { en: 'Celebrate the bond of family in vibrant, joyful Indian wear. Think bright sarees, classic kurtas, bandhanis and festive silhouettes that honour tradition with warmth and colour.',
+      hi: 'परिवार के रिश्ते का जश्न रंग-बिरंगे, ख़ुशनुमा भारतीय परिधानों में मनाइए — चटख साड़ियाँ, क्लासिक कुर्ते, बांधनी और ऐसे उत्सवी परिधान जो परंपरा को गर्मजोशी और रंगों के साथ निभाएँ।' },
+    { en: 'Indoors | PM (afternoon tea)', hi: 'इनडोर | दोपहर (चाय के समय)' },
+    { en: 'Indian traditional\nWomen: Sarees, lehengas, suit sets\nMen: Kurtas, Nehru jackets', hi: 'भारतीय पारंपरिक\nमहिलाएँ: साड़ी, लहंगा, सूट सेट\nपुरुष: कुर्ते, नेहरू जैकेट' },
+    '/assets/outfit-mayra.jpg');
+  const royal = (name) => look(name,
+    { en: 'Bring out your finest traditional Indian attire. Rich fabrics, heirloom jewellery and festive grandeur are the order of the day as we tie the knot.',
+      hi: 'अपने सबसे शानदार पारंपरिक भारतीय परिधान निकालिए। भव्य कपड़े, पुश्तैनी गहने और उत्सवी शान — आख़िर आज हम सात फेरे ले रहे हैं।' },
+    { en: 'Outdoors | AM to PM (noon to sunset)', hi: 'आउटडोर | सुबह से शाम (दोपहर से सूर्यास्त तक)' },
+    { en: 'Royal heritage\nWomen: Lehengas, sarees, anarkalis, shararas, kurta sets\nMen: Jodhpuris, achkan, Nehru jackets, kurtas', hi: 'शाही विरासत\nमहिलाएँ: लहंगा, साड़ी, अनारकली, शरारा, कुर्ता सेट\nपुरुष: जोधपुरी, अचकन, नेहरू जैकेट, कुर्ते' },
+    '/assets/outfit-baraat-phere.jpg');
+  return {
+    mehendi: look('50 Shades of Henna',
+      { en: 'Blend nature’s best tones with soft sage greens, burnt oranges and earthy browns. Flowy outfits and effortless festive styles are perfect for an evening of henna and music.',
+        hi: 'प्रकृति के सबसे सुंदर रंगों को अपनाइए — हल्का सेज हरा, बर्न्ट ऑरेंज और मिट्टी जैसे भूरे रंग। मेहंदी और संगीत की शाम के लिए बहते-लहराते आउटफ़िट और सहज उत्सवी स्टाइल सबसे बढ़िया हैं।' },
+      { en: 'Indoors | PM (early evening till dinner)', hi: 'इनडोर | शाम (शाम से रात के खाने तक)' },
+      { en: 'Terracotta & Sage\nWomen: Suit sets, Indo-western, comfortable Indian wear\nMen: Kurta pyjama', hi: 'टेराकोटा और सेज\nमहिलाएँ: सूट सेट, इंडो-वेस्टर्न, आरामदायक भारतीय परिधान\nपुरुष: कुर्ता पायजामा' },
+      '/assets/outfit-mehendi.jpg'),
+    haldi: look('Too Haldi to Handle!',
+      { en: 'Turn up the saturation! Wear your brightest, happiest colours – think vibrant pinks, oranges, yellows and blues – or go with beautiful pastels and florals.',
+        hi: 'रंगों को खुलकर बिखेरिए! अपने सबसे चटख, ख़ुशनुमा रंग पहनिए — गुलाबी, नारंगी, पीला और नीला — या फिर सुंदर पेस्टल और फ़्लोरल।' },
+      { en: 'Outdoors | PM (from brunch to lunch!)', hi: 'आउटडोर | दोपहर (ब्रंच से लंच तक!)' },
+      { en: 'A festival of hues\nWomen: Indo-western chic\nMen: Kurtas, Nehru jackets, bomber jackets, short jackets', hi: 'रंगों का उत्सव\nमहिलाएँ: इंडो-वेस्टर्न शिक\nपुरुष: कुर्ते, नेहरू जैकेट, बॉम्बर जैकेट, शॉर्ट जैकेट' },
+      '/assets/outfit-haldi.jpg'),
+    'bride-mayara': mayra,
+    'groom-mayara': mayra,
+    reception: look('The Night before Forever',
+      { en: 'Dress to the nines in your finest evening wear – think sequins, metallics, rich velvets. Red-carpet energy is highly encouraged.',
+        hi: 'अपने सबसे शानदार ईवनिंग वियर में सज-धजकर आइए — सीक्विन, मेटैलिक, रिच वेलवेट। रेड-कार्पेट वाले अंदाज़ का पूरा स्वागत है!' },
+      { en: 'Outdoors | PM (nightfall)', hi: 'आउटडोर | रात' },
+      { en: 'Black tie & sequins\nWomen: Cocktail sarees, gowns, lehengas, anarkalis\nMen: Tailored suits, jodhpuris, tuxedo, achkan', hi: 'ब्लैक टाई और सीक्विन\nमहिलाएँ: कॉकटेल साड़ी, गाउन, लहंगा, अनारकली\nपुरुष: टेलर्ड सूट, जोधपुरी, टक्सीडो, अचकन' },
+      '/assets/outfit-reception.jpg'),
+    afterparty: look('The One where Nobody Sleeps',
+      { en: 'Swap the heavy layers for sleek, dance-floor-ready fits. Think party dresses, sharp jackets, sneakers or comfy heels, and anything that lets you dance till dawn.',
+        hi: 'भारी कपड़ों की जगह स्लीक, डांस-फ़्लोर के लिए तैयार आउटफ़िट पहनिए — पार्टी ड्रेस, शार्प जैकेट, स्नीकर्स या आरामदायक हील्स, और कुछ भी जिसमें आप सुबह तक नाच सकें।' },
+      { en: 'Indoors | PM (after-hours)', hi: 'इनडोर | देर रात' },
+      { en: 'After hours!\nWomen: Dresses, jumpsuits, co-ord sets\nMen: Formal polos, shirts, fun jackets', hi: 'आफ़्टर आवर्स!\nमहिलाएँ: ड्रेस, जंपसूट, को-ऑर्ड सेट\nपुरुष: फ़ॉर्मल पोलो, शर्ट, फ़न जैकेट' },
+      '/assets/outfit-afterparty.jpg'),
+    baraat: royal('The Big Bang Baarat'),
+    phere: royal('The Knot So Casual Affair'),
+    'closing-dinner': look('Post Credit Scene',
+      { en: 'Keep it light, comfortable and easy-breezy. Soft fabrics, relaxed fits and effortless style to close out the celebrations on a cosy note.',
+        hi: 'हल्का, आरामदायक और सहज रखिए। मुलायम कपड़े, रिलैक्स्ड फ़िट और बेफ़िक्र स्टाइल — जश्न का एक सुकून भरा समापन।' },
+      { en: 'Indoors | PM (beyond sunset)', hi: 'इनडोर | शाम (सूर्यास्त के बाद)' },
+      { en: 'Keep it casual!\nWomen: Indo-western co-ord sets, jeans & top, dresses, jumpsuits\nMen: Polo T-shirts, casual T-shirts, shirts', hi: 'कैज़ुअल रखिए!\nमहिलाएँ: इंडो-वेस्टर्न को-ऑर्ड सेट, जींस और टॉप, ड्रेस, जंपसूट\nपुरुष: पोलो टी-शर्ट, कैज़ुअल टी-शर्ट, शर्ट' },
+      '/assets/outfit-closing-dinner.jpg'),
+  };
+})();
+const EVENTS_VERSION = 6;
+const EVENT_BASE = { dressName: { en: '', hi: '' }, dressNote: { en: '', hi: '' }, dressSetting: { en: '', hi: '' }, outfitImage: '', endDate: '', timeNote: { en: '', hi: '' }, endNote: { en: '', hi: '' }, dress: { en: '', hi: '' }, imageUrl: '', palette: [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION };
 // Events saved by an older version get the newer defaults, but only where nothing has been customised.
 function upgradeEvents(list) {
   // v5 adds the Friends' Afterparty (once: after the dashboard saves the events, they are all v5 and it is never re-added)
-  if (list.some(e => (e.v || 1) < 5) && !list.some(e => e.id === 'afterparty')) list = [...list, { ...EVENT_BASE, ...AFTERPARTY }].sort((a, b) => a.sort - b.sort);
+  if (list.some(e => (e.v || 1) < 5) && !list.some(e => e.id === 'afterparty')) list = [...list, { ...EVENT_BASE, ...AFTERPARTY, ...JSON.parse(JSON.stringify(WARDROBE.afterparty)) }].sort((a, b) => a.sort - b.sort);
   return list.map(e => {
     const v = e.v || 1;
     if (v >= EVENTS_VERSION) return e;
@@ -140,6 +193,7 @@ function upgradeEvents(list) {
         if (x.timeNote && x.timeNote.en === 'Lunches, dinners & everything in between') x.timeNote = { en: 'New friends, pre-wedding fun & exploring Indore', hi: 'नए दोस्त, शादी से पहले की रौनक और इंदौर की सैर' };
       }
     }
+    if (v < 6 && WARDROBE[x.id]) Object.assign(x, JSON.parse(JSON.stringify(WARDROBE[x.id]))); // wardrobe planner looks
     return x;
   });
 }
@@ -184,7 +238,7 @@ const DEFAULT_EVENTS = [
     desc: { en: 'A relaxed final dinner together to round off the celebrations.',
             hi: 'उत्सव के समापन पर साथ मिलकर एक सुकून भरा रात्रिभोज।' } },
   AFTERPARTY,
-].map(e => ({ ...EVENT_BASE, imageUrl: EVENT_IMAGES[e.id] || '', ...e }));
+].map(e => ({ ...EVENT_BASE, imageUrl: EVENT_IMAGES[e.id] || '', ...e, ...(WARDROBE[e.id] ? JSON.parse(JSON.stringify(WARDROBE[e.id])) : {}) }));
 
 
 const Defaults = { DEFAULT_SETTINGS, DEFAULT_CONTENT, DEFAULT_EVENTS, upgradeEvents };

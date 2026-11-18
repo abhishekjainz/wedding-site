@@ -562,3 +562,20 @@ footer p { margin: 6px 0; }
 .stay-card h3 svg { width: 20px; height: 20px; color: #b98a5a; flex: none; }
 .stay-card p { margin: 3px 0 0; font-size: 15px; color: var(--ink-soft); }
 .lang-hi .stay-card .time small { letter-spacing: 0; }
+
+/* wardrobe planner look on the event page */
+.wardrobe { margin-top: 14px; padding: 16px 16px 18px; border-radius: 14px; border: 1px solid var(--line); background: #fbf8f3; text-align: center; }
+.wardrobe .w-art { margin: -4px -4px 8px; }
+.wardrobe .w-art img { width: 100%; max-height: 340px; object-fit: contain; display: block; border-radius: 10px; mix-blend-mode: multiply; }
+.wardrobe .w-name { margin: 4px 0 0; font: 400 34px/1.15 var(--script); color: #9a6b3c; }
+.wardrobe .w-setting { margin: 4px 0 0; font: italic 14px var(--serif); color: #b8894f; }
+.wardrobe .w-note { margin: 10px 0 0; font: italic 15.5px/1.55 var(--serif); color: var(--ink-soft); }
+.wardrobe .w-code { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.wardrobe .w-code b { display: block; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.wardrobe .dress-line { display: block; color: var(--ink-soft); }
+.wardrobe .dress-line em { font-style: italic; color: #b8894f; margin-right: 4px; }
+.wardrobe-tip { display: flex; gap: 12px; text-align: left; margin: 18px auto 0; max-width: 460px; padding: 14px 16px; border-radius: 12px; border: 1px dashed #d9c3a9; background: rgba(255, 252, 247, .55); }
+.wardrobe-tip svg { width: 22px; height: 22px; flex: none; color: #b98a5a; margin-top: 2px; }
+.wardrobe-tip b { display: block; font: 500 12px var(--caps); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
+.wardrobe-tip p { margin: 4px 0 0; font-size: 15px; color: var(--ink-soft); }
+.lang-hi .wardrobe-tip b { letter-spacing: 0; font-size: 13px; }

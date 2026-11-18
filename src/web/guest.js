@@ -218,6 +218,19 @@
     return `<div class="stay-card"><div class="time">${timeHtml}${dayNote ? `<span class="until">${esc(dayNote)}</span>` : ''}</div>
       <div><h3>${Art.icon.bed}${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
   }
+  // Dress code on the event page: the wardrobe-planner illustration, its fun name, setting, mood and what to wear.
+  function wardrobeHtml(e) {
+    const t = T(), lines = dressLines(e);
+    if (!lines.length) return `<div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${esc(t.dressSoonLong)}</div></div>`;
+    const line = l => l.includes(':') ? `<span class="dress-line"><em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}</span>` : `<span class="dress-line">${esc(l)}</span>`;
+    return `<div class="wardrobe">
+      ${e.outfitImage ? `<div class="w-art"><img src="${esc(media(e.outfitImage))}" alt="${esc(t.outfitAlt(L(e.dressName) || L(e.title)))}" loading="lazy"></div>` : ''}
+      ${L(e.dressName) ? `<p class="w-name">${esc(L(e.dressName))}</p>` : ''}
+      ${L(e.dressSetting) ? `<p class="w-setting">${esc(L(e.dressSetting))}</p>` : ''}
+      ${L(e.dressNote) ? `<p class="w-note">${esc(L(e.dressNote))}</p>` : ''}
+      <div class="w-code"><b>${esc(t.dressCode)}: ${esc(lines[0])}</b>${lines.slice(1).map(line).join('')}</div>
+    </div>`;
+  }
   function eventCard(e) {
     const t = T();
     if (e.endDate && e.endDate > e.date) {
@@ -289,6 +302,7 @@
           return `<button role="tab" aria-selected="${d === day}" data-day="${d}"><b>${esc(top).toUpperCase()}</b><small>${esc(sub)}</small></button>`; }).join('')}</div>
         <div class="events" role="tabpanel">${dayItems(day)}</div>
         <p class="ist">${esc(t.allTimesIst)}</p>
+        ${site.events.some(e => dressLines(e).length) ? `<div class="wardrobe-tip">${Art.icon.dress}<div><b>${esc(t.wardrobeTitle)}</b><p>${esc(t.wardrobeTip)}</p><p>${esc(t.weatherTip)}</p></div></div>` : ''}
       </section>
 
       <section id="rsvp" class="rsvp-intro">${Art.corner('tr sm', 1)}${Art.corner('bl sm')}
@@ -397,7 +411,7 @@
       ${e.imageUrl ? `<div class="detail-hero photo"><img src="${esc(media(e.imageUrl))}" alt="${esc(L(e.title))}"></div>` : `<div class="detail-hero">${Art.corner('tl sm')}${Art.corner('br sm', 1)}<img src="${LOGO}" alt="" style="width:110px;opacity:.9"></div>`}
       <p style="margin:0 0 6px">${esc(L(e.desc))}</p>
       <div class="infobox">${Art.icon.clock}<div><b>${esc(t.date)}</b>${esc(evDay(e, true))}<br>${esc(fmtWhen(e))}${e.endDate ? `<br><span class="muted">${esc(t.comeAnyDays)}</span>` : ' IST'}</div></div>
-      <div class="infobox">${Art.icon.dress}<div><b>${esc(t.dressCode)}</b>${dressLines(e).length ? dressLines(e).map((l, i) => i === 0 ? `<span class="dress-theme">${esc(l)}</span>` : `<span class="dress-line">${l.includes(':') ? `<em>${esc(l.slice(0, l.indexOf(':') + 1))}</em>${esc(l.slice(l.indexOf(':') + 1))}` : esc(l)}</span>`).join('') : esc(t.dressSoonLong)}${(e.palette || []).length ? `<div class="dress-visual">${Art.outfits(e.palette, e.id.replace(/[^a-z0-9]/gi, ''))}</div>` : ''}</div></div>
+      ${wardrobeHtml(e)}
       <div class="infobox">${Art.icon.pin}<div style="flex:1"><b>${esc(t.venueLabel)}</b>${e.endDate ? esc(L(e.location) || t.toBeShared) : esc(L(site.content.venueName)) + (L(e.location) ? ' — ' + esc(L(e.location)) : `<br><span class="muted">${esc(t.toBeShared)}</span>`)}
         ${e.mapsUrl || !e.endDate ? `<br><a class="linkbtn" style="padding:8px 0 0" href="${esc(e.mapsUrl || site.settings.mapsUrl)}" target="_blank" rel="noopener">${esc(t.directions)} ${Art.icon.arrow}</a>` : ''}</div></div>
       ${site.settings.open ? `<button class="btn block" style="margin-top:22px" data-act="rsvp2">${esc(t.rsvpCta)}</button>` : ''}
