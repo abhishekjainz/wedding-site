@@ -127,6 +127,8 @@ const WARDROBE = (() => {
     { en: 'Royal heritage\nWomen: Lehengas, sarees, anarkalis, shararas, kurta sets\nMen: Jodhpuris, achkan, Nehru jackets, kurtas', hi: 'शाही विरासत\nमहिलाएँ: लहंगा, साड़ी, अनारकली, शरारा, कुर्ता सेट\nपुरुष: जोधपुरी, अचकन, नेहरू जैकेट, कुर्ते' },
     '/assets/outfit-baraat-phere.jpg');
   return {
+    'home-days': { dress: { en: 'Casual & comfortable\nEveryday wear: it’s mostly at home and touring the city, so comfy shoes are a must!',
+                            hi: 'कैज़ुअल और आरामदायक\nरोज़मर्रा के कपड़े: ज़्यादातर समय घर पर और शहर घूमने में बीतेगा, इसलिए आरामदायक जूते ज़रूर रखें!' } },
     mehendi: look('50 Shades of Henna',
       { en: 'Blend nature’s best tones with soft sage greens, burnt oranges and earthy browns. Flowy outfits and effortless festive styles are perfect for an evening of henna and music.',
         hi: 'प्रकृति के सबसे सुंदर रंगों को अपनाइए — हल्का सेज हरा, बर्न्ट ऑरेंज और मिट्टी जैसे भूरे रंग। मेहंदी और संगीत की शाम के लिए बहते-लहराते आउटफ़िट और सहज उत्सवी स्टाइल सबसे बढ़िया हैं।' },
@@ -136,10 +138,10 @@ const WARDROBE = (() => {
     haldi: look('Too Haldi to Handle!',
       { en: 'Turn up the saturation! Wear your brightest, happiest colours – think vibrant pinks, oranges, yellows and blues – or go with beautiful pastels and florals.',
         hi: 'रंगों को खुलकर बिखेरिए! अपने सबसे चटख, ख़ुशनुमा रंग पहनिए — गुलाबी, नारंगी, पीला और नीला — या फिर सुंदर पेस्टल और फ़्लोरल।' },
-      { en: 'Outdoors | PM (from brunch to lunch!)', hi: 'आउटडोर | दोपहर (ब्रंच से लंच तक!)' },
+      { en: 'Outdoors | PM (lunch)', hi: 'आउटडोर | दोपहर (लंच)' },
       { en: 'A festival of hues\nWomen: Indo-western chic\nMen: Kurtas, Nehru jackets, bomber jackets, short jackets', hi: 'रंगों का उत्सव\nमहिलाएँ: इंडो-वेस्टर्न शिक\nपुरुष: कुर्ते, नेहरू जैकेट, बॉम्बर जैकेट, शॉर्ट जैकेट' },
       '/assets/outfit-haldi.jpg'),
-    'bride-mayara': mayra,
+    'bride-mayara': { ...mayra, dressSetting: { en: 'Indoors | AM (brunch)', hi: 'इनडोर | सुबह (ब्रंच)' } },
     'groom-mayara': mayra,
     reception: look('The Night before Forever',
       { en: 'Dress to the nines in your finest evening wear – think sequins, metallics, rich velvets. Red-carpet energy is highly encouraged.',
@@ -163,7 +165,7 @@ const WARDROBE = (() => {
       '/assets/outfit-closing-dinner.jpg'),
   };
 })();
-const EVENTS_VERSION = 6;
+const EVENTS_VERSION = 7;
 const EVENT_BASE = { dressName: { en: '', hi: '' }, dressNote: { en: '', hi: '' }, dressSetting: { en: '', hi: '' }, outfitImage: '', endDate: '', timeNote: { en: '', hi: '' }, endNote: { en: '', hi: '' }, dress: { en: '', hi: '' }, imageUrl: '', palette: [], location: { en: '', hi: '' }, mapsUrl: '', reviewNote: 'Description pending family review', v: EVENTS_VERSION };
 // Events saved by an older version get the newer defaults, but only where nothing has been customised.
 function upgradeEvents(list) {
@@ -194,6 +196,10 @@ function upgradeEvents(list) {
       }
     }
     if (v < 6 && WARDROBE[x.id]) Object.assign(x, JSON.parse(JSON.stringify(WARDROBE[x.id]))); // wardrobe planner looks
+    if (v < 7) { // meal-time settings for Maamera & Haldi, and the Home Days dress code
+      if (x.id === 'bride-mayara' || x.id === 'haldi') x.dressSetting = JSON.parse(JSON.stringify(WARDROBE[x.id].dressSetting));
+      if (x.id === 'home-days' && !(x.dress && x.dress.en)) x.dress = JSON.parse(JSON.stringify(WARDROBE['home-days'].dress));
+    }
     return x;
   });
 }

@@ -579,3 +579,4 @@ footer p { margin: 6px 0; }
 .wardrobe-tip b { display: block; font: 500 12px var(--caps); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
 .wardrobe-tip p { margin: 4px 0 0; font-size: 15px; color: var(--ink-soft); }
 .lang-hi .wardrobe-tip b { letter-spacing: 0; font-size: 13px; }
+.wardrobe .w-code:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
